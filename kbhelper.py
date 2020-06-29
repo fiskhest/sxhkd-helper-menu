@@ -52,38 +52,48 @@ class sxhkd_helper:
         """ take the raw configuration from config and parses all eligible blocks, unchaining keychains and returning
         a list of unpacked commands """
         keybinds = list()
-        block_regex = self.descr + r"[\w\s\(\),\-\/&]+\n[\w\s+\d{}_\-,;]+\n[\s+\t]+[\w\s\-_$'\\~%{,!.\/\(\)};\"\n]+\n\n"
+        block_regex = self.descr + r"[\w\s\(\),\-\/&{}]+\n[\w\s+\d{}_\-,;]+\n[\s+\t]+[\w\s\-_$'\\~%{,!.\/\(\)};\"\n]+\n\n"
         eligible_blocks = re.findall(block_regex, self._get_raw_config())
 
         for block in eligible_blocks:
             lines = self._transform_block(block)
             desc = lines[0].strip(self.descr)
             cmd = lines[2].rstrip()
-            unchained_lines = self._unchain_line(lines)
 
             if not re.search(r'(?<={).*(?=})', cmd):
                 exit("A keychain denoting multiple segments was specified for the keybind, but no matching cmdchain exists. Fix your sxhkdrc")
+
+            unchained_lines = self._unchain_line(lines)
+            desc = self._unchain_line([desc])
+            cmd = self._unchain_line([cmd])
+
             for index, line in enumerate(unchained_lines):
-                keybinds.append((desc, line, self._unchain_line([cmd])[index]))
-            
+
+                if len(desc) != index:
+                    desc = desc
+                #elif len(cmd) != index:
+                #    cmd = cmd.pop()
+
+                keybinds.append((desc, line, cmd))
         return keybinds
 
 
     def _unchain_line(self, lines):
         """ take a transformed block of lines (from ._transform_block), unpacking any keychains, finally
         returning any unpacked or original lines of keybinds """
+        chain = False
         any_chain = False
         for line in lines:
-            chain = re.search(r'(?<={).*(?=})', line)
+            try:
+                chain = re.search(r'(?<={).*(?=})', line)
+            except TypeError:
+                pass
             if chain:
                 any_chain = True
                 return self._unchain(chain.group(0), line)
 
         if not any_chain:
-            no_chain_return = list()
-            no_chain_return.append(lines)  # lines[1] was here previously..?
-
-        return no_chain_return
+            return [lines]
 
     def _unchain(self, keys, line):
         """ takes a list of keys or commands and the original line, returning a new list of unpacked keybinds """

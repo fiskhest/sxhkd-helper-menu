@@ -1,4 +1,4 @@
-# comment1
+# comment1 {upp,ner}
 {test,apa +} Tab
   echo {hej, boll}
 

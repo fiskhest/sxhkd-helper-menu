@@ -1,14 +1,13 @@
-# kbrmenu - keybind rofi menu
+# keybind helper - standalone sxhkd configuration parser and keybind runner
 
-kbrmenu -- Easily document, and discover sxhkd keybindings, heavily inspired by [https://github.com/Triagle/hotkey-helper](Hotkey-Helper)
+kbhelper -- Easily discover and execute sxhkd keybindings, inspired by [https://github.com/Triagle/hotkey-helper](Hotkey-Helper)
 
 [[https://ipfs.pics/ipfs/QmTdC3PnD1cEcqVo9cUjwY1PsYdVgRbwtypXTT5z8vC5cp]] gif
 
 * What this is
-kbrmenu is a python utility that parses `sxhkdhrc`-files taking the hotkeys and some specially formatting comments to create a
-documented list associating keybindings with their actions.
-With the latest updates intelligent parsing is added, allowing
-hotkeys to be executed by string
+kbhelper.py is a python utility that parses `sxhkdhrc`-files for all valid blocks to create a documented list 
+associating the description, the keybinding, and the action to execute.
+
 * Installation
 This program requires python 3.7 at minimum .
 
@@ -24,7 +23,7 @@ In order to use the program's functionality, you need to tweak your
 keybindings.
 
 The special syntax for these documentation comments is any line
-beginning with the shell variable `descriptor`, defaulting to `# `. Set these comments up above every keybinding
+beginning with the variable `descriptor`, which can be defined with [--descriptor, -d] or the shell variable `sxhkd_config=CFGPATH/sxhkdrc`, defaulting to `# ` if none is defined. Set these comments up above every keybinding
 you wish to document.
 
 #+BEGIN_EXAMPLE
@@ -36,8 +35,8 @@ super + alt + Escape
 # super alt Escape - Quit bspwm
 #+END_EXAMPLE
 
-Additionally, ={}= can be used to denote lists mapping multiple segments
-of documentation to multiple hotkey segments at once
+Additionally, ={}= can be used to unpack keychains mapping multiple segments
+of description to keybind and action.
 
 #+BEGIN_EXAMPLE
 # Example of segmented documentation
@@ -54,44 +53,49 @@ super + {h,j,k,l}
 This allows for fast, compact documentation for keybindings of
 arbitrary complexity.
 * Usage
-To use the program, run =hotkeys=.
+To use the program, run `kbhelper.py`
 
 #+BEGIN_SRC shell
-hotkeys
+kbhelper.py
 #+END_SRC
 
 This will print the usage for the program
 
 #+BEGIN_EXAMPLE
-Usage: hotkeys [options...]
+usage: kbhelper.py [-h] [-c CONFIG] [-d DESCRIPTOR] [-e] [-ks KEYSTROKE] [-p]
+                   [-r]
 
- -e, --execute=HOTKEY     Execute command for HOTKEY
- -p, --print              Print hotkeys
- -f, --file=NAME          Parse file NAME
- -h, --help               Display this text
+keybind helper - standalone sxhkd configuration parser and keystroke runner
 
+optional arguments:
+  -h, --help            show this help message and exit
+  -c CONFIG, --config CONFIG
+                        Configurationfile location
+  -d DESCRIPTOR, --descriptor DESCRIPTOR
+                        comment descriptor
+  -e, --exec            execute the passed shortcut
+  -ks KEYSTROKE, --keystroke KEYSTROKE
+                        when using --exec, also define a keystroke for which
+                        command is to be executed
+  -p, --print           Print fully unpacked keybind table
+  -r, --raw             Print the raw configuration
 #+END_EXAMPLE
 
-By default, =hotkeys= looks in the default sxhkd config folder
-(~/.config/sxhkd/sxhkdrc) for the sxhkdrc file. You can also pass a path argument, for the location of your =.sxhkdrc=
+By default, =kbhelper= looks in the default sxhkd config folder
+(~/.config/sxhkd/sxhkdrc) for the sxhkdrc file. You can also pass a path with the [--config,-c] argument to the location of your =sxhkdrc=
 file.
 
 #+BEGIN_SRC shell
-hotkeys -f /path/to/.sxhkdrc
+python kbhelper.py -c /path/to/sxhkdrc
 #+END_SRC
 
-However this will do nothing either, you need to pass an action
-argument to the program, currently -p or -e to tell hotkeys what to do
-with the file.
+This will print an unpacked table of possible keybinds. passing [--exec,-e] and [--keystroke,-ks] instead executes the action defined for that keystroke (if one was found)
 
-- -p :: Print a formatted list of hotkeys.
-- -e :: Execute a hotkey string (e.g "super w").
-
-Upon running =hotkeys -p=, you should get a formatted list of hotkeys
-printed to the terminal, something like
+Upon running =python kbhelper.py -c $sxhkdrc_config_path=, you should get a formatted list of keybinds printed to 
+the terminal, something like
 
 #+BEGIN_EXAMPLE
-[~/repos/scm/hotkey-helper] ->>  hotkeys -p
+python kbhelper.py
 super question           - Show keybindings
 super i                  - Capture notes using org-mode
 super space              - Run a command
