@@ -8,12 +8,12 @@ HOME = os.getenv('HOME')
 config_location = os.getenv('sxhkd_config', f'{HOME}/.config/sxhkd/sxhkdrc')
 descriptor = os.getenv('descriptor', '# ')
 
-parser = argparse.ArgumentParser(description='keybind helper - standalone sxhkd configuration parser and keybind runner')
+parser = argparse.ArgumentParser(description='keybind helper - standalone sxhkd configuration parser and keystroke runner')
 parser.add_argument('-c', '--config', default=f'{config_location}', help='Configurationfile location')
 parser.add_argument('-d', '--descriptor', default=f'{descriptor}', help='comment descriptor')
 parser.add_argument('-e', '--exec', action='store_true', help='execute the passed shortcut')
-parser.add_argument('-ks', '--keystroke', default='', help='if using --exec, also define a keystroke for which command is to be executed')
-parser.add_argument('-p', '--print', default='true', action='store_true', help='Print fully unpacked keybind table ')
+parser.add_argument('-ks', '--keystroke', default='', help='when using --exec, also define a keystroke for which command is to be executed')
+parser.add_argument('-p', '--print', default='true', action='store_true', help='Print fully unpacked keybind table')
 parser.add_argument('-r', '--raw', action='store_true', help='Print the raw configuration')
 
 
@@ -34,9 +34,9 @@ class sxhkd_helper:
         elem 3: command to execute """
         indent = re.sub(r"\n[\t\s]+", "\n", block)
         trim_trailing_commands = re.sub(r"\\\n", "", indent)
-        block_row = re.split(r'\n', trim_trailing_commands, 2)
+        block_lines = re.split(r'\n', trim_trailing_commands, 2)
 
-        return block_row
+        return block_lines
 
 
     def _get_raw_config(self):
@@ -62,7 +62,7 @@ class sxhkd_helper:
             unchained_lines = self._unchain_line(lines)
 
             if not re.search(r'(?<={).*(?=})', cmd):
-                exit("A keychain was specified for the keybind, but no matching cmdchain exists. Fix your sxhkdrc")
+                exit("A keychain denoting multiple segments was specified for the keybind, but no matching cmdchain exists. Fix your sxhkdrc")
             for index, line in enumerate(unchained_lines):
                 keybinds.append((desc, line, self._unchain_line([cmd])[index]))
             
@@ -81,23 +81,23 @@ class sxhkd_helper:
 
         if not any_chain:
             no_chain_return = list()
-            no_chain_return.append(lines[1])
+            no_chain_return.append(lines)  # lines[1] was here previously..?
 
         return no_chain_return
 
-    def _unchain(self, keys, row):
-        """ takes a list of commands and the original row and returns a new list of unpacked rows """
-        rows = list()
+    def _unchain(self, keys, line):
+        """ takes a list of keys or commands and the original line, returning a new list of unpacked keybinds """
+        lines = list()
 
         keys = re.sub(r'\s', '', keys)
 
         for key in keys.split(','):
-            rows.append(self._delim_row(key, row))
-        return rows
+            lines.append(self._delim_segment(key, line))
+        return lines
 
 
-    def _delim_row(self, key, line):
-        """ places a delimiter (+, or '') on the row based on chain position (start of line, in the middle, end of line OR nothing if the line only contains keychains) """
+    def _delim_segment(self, key, line):
+        """ places a delimiter (+, or '') at the previous keychain segment position (start of line, in the middle, end of line OR nothing if the line only contains keychains) """
         if '+' in key:
             key = re.sub(r'\+', '', key)
 
