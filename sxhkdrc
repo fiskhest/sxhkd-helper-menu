@@ -1,12 +1,16 @@
 # comment1
 {test,apa +} Tab
-    hej
+  echo {hej, boll}
 
 # comment2
 super + {_,alt +} h
-  test
+    {test,dunk}
 
 # comment3
 super + alt + {j,k}
-	boll
+	boll {lol,pc}
+
+# comment4
+ctrl + h ; {a,b,c}
+    apa {kul,ful,jul}
 
