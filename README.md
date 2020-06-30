@@ -4,11 +4,11 @@ kbhelper -- Easily discover and execute sxhkd keybindings, inspired by [https://
 
 [[https://ipfs.pics/ipfs/QmTdC3PnD1cEcqVo9cUjwY1PsYdVgRbwtypXTT5z8vC5cp]] gif
 
-* What this is
-kbhelper.py is a python utility that parses `sxhkdhrc`-files for all valid blocks to create a documented list 
-associating the description, the keybinding, and the action to execute.
+# What this is
+kbhelper is a python utility that parses `sxhkdhrc`-files for all valid blocks to create a documented list associating
+the description, the keybinding, and the action to execute. It can be used in conjunction with rofi/dmenu to have a fuzzy searchable cheatsheet of your configured keybinds.
 
-* Installation
+# Installation
 This program requires python 3.7 at minimum .
 
 To set this up inside your $SHELL;
@@ -17,30 +17,31 @@ To set this up inside your $SHELL;
 $ sudo wget ... -O /usr/sbin/local/
 ```
 
-* .sxhkdrc Setup
+# sxhkdrc setup
 In order to use the program's functionality, you need to tweak your
 `sxhkdrc` to include special comments designed as documentation for
 keybindings.
 
 The special syntax for these documentation comments is any line
-beginning with the variable `descriptor`, which can be defined with [--descriptor, -d] or the shell variable `sxhkd_config=CFGPATH/sxhkdrc`, defaulting to `# ` if none is defined. Set these comments up above every keybinding
+beginning with the variable `descriptor`, which can be defined with [--descriptor, -d] or the shell variable `descriptor='# '`, defaulting to `# ` if none is defined. Set these comments up above every keybinding
 you wish to document.
 
-#+BEGIN_EXAMPLE
+```
 # Example keybinding with documentation
 # Quit bspwm
 super + alt + Escape
     bspc quit
 # This would show up in the formatted output as:
 # super alt Escape - Quit bspwm
-#+END_EXAMPLE
+```
 
-Additionally, ={}= can be used to unpack keychains mapping multiple segments
-of description to keybind and action.
+Additionally, `{}` can be used to unpack keychains mapping multiple segments
+of description to keybind and action. If the preceeding description does not contain any keychains, all unpacked
+lines will get the same description.
 
-#+BEGIN_EXAMPLE
+```
 # Example of segmented documentation
-# ;; Move the current window {left,down,up,right}
+# Move the current window {left,down,up,right}
 super + {h,j,k,l}
   bspc node -s {west,south,north,east}
 # This would expand in output as:
@@ -48,20 +49,21 @@ super + {h,j,k,l}
 # super j                  - Move the current window down
 # super k                  - Move the current window up
 # super l                  - Move the current window right
-#+END_EXAMPLE
+```
 
 This allows for fast, compact documentation for keybindings of
 arbitrary complexity.
-* Usage
-To use the program, run `kbhelper.py`
 
-#+BEGIN_SRC shell
-kbhelper.py
-#+END_SRC
+# Usage
+To use the program, run `kbhelper.py`. This will attempt to parse the configuration stored at the default location with the default descriptor, finally printing back to console (same as `--print`).
 
-This will print the usage for the program
+```
+python kbhelper.py
+```
 
-#+BEGIN_EXAMPLE
+Pass `--help` for a usage table:
+
+```
 usage: kbhelper.py [-h] [-c CONFIG] [-d DESCRIPTOR] [-e] [-ks KEYSTROKE] [-p]
                    [-r]
 
@@ -74,99 +76,85 @@ optional arguments:
   -d DESCRIPTOR, --descriptor DESCRIPTOR
                         comment descriptor
   -e, --exec            execute the passed shortcut
-  -ks KEYSTROKE, --keystroke KEYSTROKE
-                        when using --exec, also define a keystroke for which
-                        command is to be executed
   -p, --print           Print fully unpacked keybind table
   -r, --raw             Print the raw configuration
-#+END_EXAMPLE
+```
 
-By default, =kbhelper= looks in the default sxhkd config folder
-(~/.config/sxhkd/sxhkdrc) for the sxhkdrc file. You can also pass a path with the [--config,-c] argument to the location of your =sxhkdrc=
-file.
+By default, `kbhelper` will look for a sxhkdrc in `~/.config/sxhkd/sxhkdrc`, but can be overridden by passing a path to the [--config, -c] argument or the shell variable `sxhkd_config=$CFGPATH/sxhkdrc`,
 
-#+BEGIN_SRC shell
-python kbhelper.py -c /path/to/sxhkdrc
-#+END_SRC
+```sh
+python kbhelper.py -c path/to/sxhkdrc
+```
 
-This will print an unpacked table of possible keybinds. passing [--exec,-e] and [--keystroke,-ks] instead executes the action defined for that keystroke (if one was found)
+This will print an unpacked table of possible keybinds. passing [--exec,-e] instead executes the action defined for that keystroke (if one was found)
 
-Upon running =python kbhelper.py -c $sxhkdrc_config_path=, you should get a formatted list of keybinds printed to 
-the terminal, something like
-
-#+BEGIN_EXAMPLE
-python kbhelper.py
-super question           - Show keybindings
-super i                  - Capture notes using org-mode
-super space              - Run a command
-super Return             - Spawn terminal
+```
+super + question           - Show keybindings
+super + i                  - Capture notes using org-mode
+super + space              - Run a command
+super + Return             - Spawn terminal
 XF86AudioStop            - Open ncmpcpp
 XF86AudioPrev            - Previous song
 XF86AudioNext            - Next song
 XF86AudioPlay            - Play mpd
 XF86AudioRaiseVolume     - Raise Volume
 XF86AudioLowerVolume     - Lower Volume
-super button1-3          - Focus window
+super + button1-3          - Focus window
 button1                  - Focus window
-super ctrl h             - Move window to the left monitor
-super ctrl l             - Move window to the right monitor
-super bracketleft        - Go backward a desktop
-super bracketright       - Go forward a desktop
-super shift bracketleft  - Move window back a desktop
-super shift bracketright - Move window forward a desktop
-super h                  - Move the current window left
-super j                  - Move the current window down
-super k                  - Move the current window up
-super l                  - Move the current window right
-super m                  - Make window biggest
-super p                  - Open password manager
+super + ctrl + h             - Move window to the left monitor
+super + ctrl + l             - Move window to the right monitor
+super + bracketleft        - Go backward a desktop
+super + bracketright       - Go forward a desktop
+super + shift bracketleft  - Move window back a desktop
+super + shift bracketright - Move window forward a desktop
+super + h                  - Move the current window left
+super + j                  - Move the current window down
+super + k                  - Move the current window up
+super + l                  - Move the current window right
+super + m                  - Make window biggest
+super + p                  - Open password manager
 Print                    - Take a screenshot
-super apostrophe         - Swap last two window
-super grave              - Goto last window
-super Tab                - Goto last desktop
-super s                  - Make window float
-super f                  - Make window fullscreen
-super t                  - Make window tiled
-super b                  - Balance windows
-super w                  - Close window
-super shift w            - Show window list
-super Delete             - Suspend
-super alt Escape         - Quit bspwm
-super Escape             - Restart sxhkd
-#+END_EXAMPLE
+super + apostrophe         - Swap last two window
+super + grave              - Goto last window
+super + Tab                - Goto last desktop
+super + s                  - Make window float
+super + f                  - Make window fullscreen
+super + t                  - Make window tiled
+super + b                  - Balance windows
+super + w                  - Close window
+super + shift w            - Show window list
+super + Delete             - Suspend
+super + alt Escape         - Quit bspwm
+super + Escape             - Restart sxhkd
+```
 
-The output is tabulated (thanks to the fmt library), so all the
-descriptions are neatly aligned and easy on the eyes.
+The output is tabulated so that the columns descriptions are neatly aligned and easy to interpret
 
-This output can be piped to the likes of dmenu, or rofi.
+This output can be piped to tools such as rofi or dmenu for further processing
 
-#+BEGIN_SRC shell
+```sh
 # An example from my own config.
-hotkeys -p | rofi -i -p "Hotkeys: "
-#+END_SRC
+python kbhelper.py | rofi -i -p "Hotkeys: "
+```
 
 Doing this with a program like rofi allows for powerful searching of
 hotkeys on the system.
 
-By running =hotkeys -e=, you can execute a command associated with a
-keybinding. For instance, from the above configuration =super w= is
-bound to closing a window. 
-Thus calling:
+By running `python kbhelper.py --exec`, you can execute a command associated with a keybinding. For instance, from
+the above configuration `super + w` is bound to closing a window. Therefore, calling:
 
-#+BEGIN_SRC shell
-hotkeys -e "super w"
-#+END_SRC
+```sh
+python kbhelper.py --exec "super + w"
+```
 
 Will close a window, as expected.
 
-By combining the -p flag, and the -e flag, you can create a relatively
+By combining the `--print` flag, and the `--exec` flag, you can create a relatively
 powerful system for discovery and remembering your keybindings by
-having =hotkeys -e= run the output of the hotkeys searching script from
+having `python kbhelper.py --exec` run the output of the hotkeys searching script from
 earlier.
 
-#+BEGIN_SRC shell
+```sh
 # Adapted from the last shell script.
-hotkeys -e "$(hotkeys -p | rofi -p Hotkeys: -i -dmenu | awk -F- '{print $1}')"
-#+END_SRC
-
-The example gif shows how this script works
+python kbhelper.py -e "$(python kbhelper.py -p | rofi -p Hotkeys: -i -dmenu | awk -F- '{print $1}')"
+```

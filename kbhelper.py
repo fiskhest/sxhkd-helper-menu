@@ -3,6 +3,7 @@ import os
 import re
 import argparse
 import sys
+from itertools import zip_longest
 
 HOME = os.getenv('HOME')
 config_location = os.getenv('sxhkd_config', f'{HOME}/.config/sxhkd/sxhkdrc')
@@ -11,8 +12,7 @@ descriptor = os.getenv('descriptor', '# ')
 parser = argparse.ArgumentParser(description='keybind helper - standalone sxhkd configuration parser and keystroke runner')
 parser.add_argument('-c', '--config', default=f'{config_location}', help='Configurationfile location')
 parser.add_argument('-d', '--descriptor', default=f'{descriptor}', help='comment descriptor')
-parser.add_argument('-e', '--exec', action='store_true', help='execute the passed shortcut')
-parser.add_argument('-ks', '--keystroke', default='', help='when using --exec, also define a keystroke for which command is to be executed')
+parser.add_argument('-e', '--exec', default=False, help='execute the passed shortcut')
 parser.add_argument('-p', '--print', default='true', action='store_true', help='Print fully unpacked keybind table')
 parser.add_argument('-r', '--raw', action='store_true', help='Print the raw configuration')
 
@@ -23,7 +23,7 @@ class sxhkd_helper:
         self.location = loc
         self.descr = descr
         self.raw_config = self._get_raw_config()
-        self.keybinds = self._parse_keybinds()
+        self.keybinds = [bind for bind in self._parse_keybinds()]
 
 
     def _transform_block(self, block):
@@ -51,49 +51,44 @@ class sxhkd_helper:
     def _parse_keybinds(self):
         """ take the raw configuration from config and parses all eligible blocks, unchaining keychains and returning
         a list of unpacked commands """
-        keybinds = list()
         block_regex = self.descr + r"[\w\s\(\),\-\/&{}]+\n[\w\s+\d{}_\-,;]+\n[\s+\t]+[\w\s\-_$'\\~%{,!.\/\(\)};\"\n]+\n\n"
         eligible_blocks = re.findall(block_regex, self._get_raw_config())
-
+        unchained_lines = list()
+        return_keybinds = list()
         for block in eligible_blocks:
             lines = self._transform_block(block)
-            desc = lines[0].strip(self.descr)
-            cmd = lines[2].rstrip()
+            unchained_lines = self._unchain_lines(lines)
+            to_be_returned = list(zip_longest(*unchained_lines, fillvalue=f'{unchained_lines[0][0]}'))
+            for line in to_be_returned:
+                return_keybinds.append(line)
 
-            if not re.search(r'(?<={).*(?=})', cmd):
-                exit("A keychain denoting multiple segments was specified for the keybind, but no matching cmdchain exists. Fix your sxhkdrc")
-
-            unchained_lines = self._unchain_line(lines)
-            desc = self._unchain_line([desc])
-            cmd = self._unchain_line([cmd])
-
-            for index, line in enumerate(unchained_lines):
-
-                if len(desc) != index:
-                    desc = desc
-                #elif len(cmd) != index:
-                #    cmd = cmd.pop()
-
-                keybinds.append((desc, line, cmd))
-        return keybinds
+        return return_keybinds
 
 
-    def _unchain_line(self, lines):
+    def _unchain_lines(self, lines):
         """ take a transformed block of lines (from ._transform_block), unpacking any keychains, finally
-        returning any unpacked or original lines of keybinds """
-        chain = False
+        returning a list containing any unpacked or original lines of keybinds """
         any_chain = False
+        return_lines = list()
+        lines[0] = lines[0].strip(self.descr)
+        lines[2] = lines[2].rstrip()
+
         for line in lines:
-            try:
-                chain = re.search(r'(?<={).*(?=})', line)
-            except TypeError:
-                pass
+            chain = re.search(r'(?<={).*(?=})', line)
             if chain:
                 any_chain = True
-                return self._unchain(chain.group(0), line)
+                return_lines.append(self._unchain(chain.group(0), line))
+            else:
+                return_lines.append([line])
 
         if not any_chain:
-            return [lines]
+            return_lines.append(lines)
+
+        elif any_chain and len(return_lines) == 1:
+            exit("A keychain denoting multiple segments was specified for the keybind, but no matching cmdchain exists. Fix your sxhkdrc")
+
+        return return_lines
+
 
     def _unchain(self, keys, line):
         """ takes a list of keys or commands and the original line, returning a new list of unpacked keybinds """
@@ -121,6 +116,8 @@ class sxhkd_helper:
                 if '_' in key:  # check for wildcard
                     return re.sub(f'{pos}', ' ', line)
                 return re.sub(f'{pos}', fr'{delim}', line)
+
+        return line
     
 def print_keybinds(config):
     """ print all parsed and unpacked keybinds to console """
@@ -129,11 +126,8 @@ def print_keybinds(config):
         print(f'{original_desc}\t{keybind}\t{original_cmd}'.expandtabs(30))
 
 def execute_cmd(config, keystroke):
-    """ run command passed with --exec --keystroke 'modifier + <character>' """
+    """ run command passed with --exec 'modifier + <character>' """
     import subprocess
-    if len(keystroke) == 0:
-        exit("No keystroke defined. Pass argument --keystroke 'modifier + <character>' to execute")
-
     for keybind in config.keybinds:
         # loop through all possible keybinds, finally executing a process if we matched
         cmd = keybind[2]
@@ -144,11 +138,12 @@ def execute_cmd(config, keystroke):
 def main(args):
     config = sxhkd_helper(args.config, args.descriptor)
 
-    if args.exec:
-        execute_cmd(config, args.keystroke)
+    # only execute if --exec was passed with an actual value
+    if bool(args.exec) == True:
+        execute_cmd(config, args.exec)
 
     elif args.raw:
-        # print(config.location)
+        print(f'Config location: {config.location}')
         print(config.raw_config)
 
     elif args.print:
