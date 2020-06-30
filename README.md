@@ -14,7 +14,7 @@ This program requires python 3.7 at minimum .
 To set this up inside your $SHELL;
 
 ```sh
-$ sudo wget ... -O /usr/sbin/local/
+$ wget https://git.radivoj.se/popo/kbrmenu/src/branch/master/kbhelper.py -O ${HOME}/.local/bin/kbhelper.py
 ```
 
 # sxhkdrc setup
@@ -58,7 +58,7 @@ arbitrary complexity.
 To use the program, run `kbhelper.py`. This will attempt to parse the configuration stored at the default location with the default descriptor, finally printing back to console (same as `--print`).
 
 ```
-python kbhelper.py
+./kbhelper.py
 ```
 
 Pass `--help` for a usage table:
@@ -134,7 +134,7 @@ This output can be piped to tools such as rofi or dmenu for further processing
 
 ```sh
 # An example from my own config.
-python kbhelper.py | rofi -i -p "Hotkeys: "
+kbhelper.py | rofi -i -p "Hotkeys: "
 ```
 
 Doing this with a program like rofi allows for powerful searching of
@@ -144,17 +144,17 @@ By running `python kbhelper.py --exec`, you can execute a command associated wit
 the above configuration `super + w` is bound to closing a window. Therefore, calling:
 
 ```sh
-python kbhelper.py --exec "super + w"
+kbhelper.py --exec "super + w"
 ```
 
 Will close a window, as expected.
 
 By combining the `--print` flag, and the `--exec` flag, you can create a relatively
 powerful system for discovery and remembering your keybindings by
-having `python kbhelper.py --exec` run the output of the hotkeys searching script from
+having `kbhelper.py --exec` run the output of the hotkeys searching script from
 earlier.
 
 ```sh
 # Adapted from the last shell script.
-python kbhelper.py -e "$(python kbhelper.py -p | rofi -p Hotkeys: -i -dmenu | awk -F- '{print $1}')"
+kbhelper.py -e "$(kbhelper.py -p | rofi -p Hotkeys: -i -dmenu | awk -F- '{print $1}')"
 ```
