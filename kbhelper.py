@@ -6,11 +6,11 @@ import sys
 from itertools import zip_longest
 
 HOME = os.getenv('HOME')
-config_location = os.getenv('sxhkd_config', f'{HOME}/.config/sxhkd/sxhkdrc')
+config_file_location = os.getenv('sxhkd_config', f'{HOME}/.config/sxhkd/sxhkdrc')
 descriptor = os.getenv('descriptor', '# ')
 
 parser = argparse.ArgumentParser(description='keybind helper - standalone sxhkd configuration parser and keystroke runner')
-parser.add_argument('-c', '--config', default=f'{config_location}', help='Configurationfile location')
+parser.add_argument('-f', '--file', default=f'{config_file_location}', help='path to configuration file')
 parser.add_argument('-d', '--descriptor', default=f'{descriptor}', help='comment descriptor')
 parser.add_argument('-e', '--exec', default=False, help='execute the passed shortcut')
 parser.add_argument('-p', '--print', default='true', action='store_true', help='Print fully unpacked keybind table')
@@ -136,7 +136,7 @@ def execute_cmd(config, keystroke):
             subprocess.run([f'{cmd}'], shell=True)
 
 def main(args):
-    config = sxhkd_helper(args.config, args.descriptor)
+    config = sxhkd_helper(args.file, args.descriptor)
 
     # only execute if --exec was passed with an actual value
     if bool(args.exec) == True:
