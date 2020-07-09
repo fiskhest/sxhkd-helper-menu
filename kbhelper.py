@@ -81,10 +81,7 @@ class sxhkd_helper:
             else:
                 return_lines.append([line])
 
-        if not any_chain:
-            return_lines.append(lines)
-
-        elif any_chain and len(return_lines) == 1:
+        if any_chain and len(return_lines) == 1:
             exit("A keychain denoting multiple segments was specified for the keybind, but no matching cmdchain exists. Fix your sxhkdrc")
 
         return return_lines
