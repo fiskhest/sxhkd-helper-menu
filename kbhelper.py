@@ -96,6 +96,7 @@ class sxhkd_helper:
 
         for key in keys.split(','):
             lines.append(self._delim_segment(key, line))
+
         return lines
 
 
@@ -104,16 +105,16 @@ class sxhkd_helper:
         if '+' in key:
             key = re.sub(r'\+', '', key)
 
-        pos_in_chain = [r'^{.*}.', r'\s{.*}\s', r'{.*}$', r'^{.*}$']
-        delim_in_chain = [f"{key} + ", f" {key} + ", f"{key}", f"{key}"]
+        pos_in_chain = [r'^{.*}.', r'\s{.*}\s', r'{.*}$', r'^{.*}$', r'(?<=[\s\w]){\b(?!\+).*\b}(?=[\s\w])', r'(?<=[\s\w]){.*(?=\+).*}(?=[\s\w])']
+        delim_in_chain = [f"{key} + ", f" {key} + ", f"{key}", f"{key}", f"{key}", f"{key} + "]
         positions = zip(pos_in_chain, delim_in_chain)
 
         for pos, delim in positions: 
             match = re.search(pos, line)
             if match:
                 if '_' in key:  # check for wildcard
-                    return re.sub(f'{pos}', ' ', line)
-                return re.sub(f'{pos}', fr'{delim}', line)
+                    return re.sub(f'{pos}', '', line)
+                return re.sub(f'{pos}', f'{delim}', line)
 
         return line
     
