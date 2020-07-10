@@ -1,0 +1,8 @@
+#!/usr/bin/env bash
+
+SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )"
+
+echo $PATH
+
+${SCRIPT_DIR}/kbhelper.py -e "$(${SCRIPT_DIR}/kbhelper.py -p | rofi -font "Terminus 24" -p Hotkeys -i -dmenu | grep -Po '(?<=\s\s)(?=\S).*(?=\b\s\s)(?!$)')"
+
