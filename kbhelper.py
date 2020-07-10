@@ -14,6 +14,7 @@ parser.add_argument('-f', '--file', default=f'{config_file_location}', help='pat
 parser.add_argument('-d', '--descriptor', default=f'{descriptor}', help='comment descriptor')
 parser.add_argument('-e', '--exec', default=False, help='execute the passed shortcut')
 parser.add_argument('-p', '--print', default='true', action='store_true', help='Print fully unpacked keybind table')
+parser.add_argument('-m', '--markdown', action='store_true', help='Print fully unpacked keybind table in markdown format(for cheatsheets)')
 parser.add_argument('-r', '--raw', action='store_true', help='Print the raw configuration')
 
 
@@ -120,7 +121,15 @@ def print_keybinds(config):
     """ print all parsed and unpacked keybinds to console """
     for bind in config.keybinds:
         original_desc, keybind, original_cmd = bind
-        print(f'{original_desc}\t{keybind}\t{original_cmd}'.expandtabs(30))
+        print(f'{original_desc}\t{keybind}\t{original_cmd}'.expandtabs(50))
+
+
+def print_markdown(config):
+    """ print all parsed and unpacked keybinds to console in a markdown format """
+    for bind in config.keybinds:
+        original_desc, keybind, original_cmd = bind
+        print(f'`{original_desc}`\t`{keybind}`\t`{original_cmd}`'.expandtabs(55))
+
 
 def execute_cmd(config, keystroke):
     """ run command passed with --exec 'modifier + <character>' """
@@ -142,6 +151,9 @@ def main(args):
     elif args.raw:
         print(f'Config location: {config.location}')
         print(config.raw_config)
+
+    elif args.markdown:
+        print_markdown(config)
 
     elif args.print:
         print_keybinds(config)
