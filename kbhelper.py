@@ -52,7 +52,7 @@ class sxhkd_helper:
     def _parse_keybinds(self):
         """ take the raw configuration from config and parses all eligible blocks, unchaining keychains and returning
         a list of unpacked commands """
-        block_regex = self.descr + r"[\w\s\(\),\-\/&{}_\-,;:]+\n[\w\s+\d{}_\-,;:]+\n[\s+\t]+[\w\s\-_$'\\~%{,!.\/\(\)};\"\n]+\n\n"
+        block_regex = self.descr + r"[\w\s\(\),\-\/&{}_\-,;:]+\n[\w\s+\d{}_\-,;:]+\n[\s+\t]+[\w\s\-_$'\\~%{,!.\/\(\)};\"\n\^]+\n+"
         eligible_blocks = re.findall(block_regex, self._get_raw_config())
         unchained_lines = list()
         return_keybinds = list()
@@ -126,8 +126,25 @@ class sxhkd_helper:
             delim_in_chain = [f"{key}"]
 
         else:
-            pos_in_chain = [r'{.*}\s(?!=\+)(?=\w)', r'{.*}\s+(?=\+)', r'.*{_}.*', r'(?<=\s){.*}(?=\s)', r'{.*}$', r'^{.*}$', r'(?<=[\s\w]){\b(?!\+).*\b}(?=[\s\w])', r'(?<=[\s\w]){.*(?=\+).*}(?=[\s\w])']
-            delim_in_chain = [f"{key} + ", f"{key} ", f"{key} + ", f"{key}", f"{key}", f"{key}", f"{key}", f"{key} + "]
+            pos_in_chain = [r'{.*}\s(?!=\+)(?=\w)',
+                            r'{.*}\s+(?=\+)',
+                            r'.*{_}.*',
+                            r'{\d+-\d+}',
+                            r'(?<=\s){.*}(?=\s)',
+                            r'{.*}$',
+                            r'^{.*}$',
+                            r'(?<=[\s\w]){\b(?!\+).*\b}(?=[\s\w])',
+                            r'(?<=[\s\w]){.*(?=\+).*}(?=[\s\w])']
+
+            delim_in_chain = [f"{key} + ",
+                              f"{key} ",
+                              f"{key} + ",
+                              f"{key}",
+                              f"{key}",
+                              f"{key}",
+                              f"{key}",
+                              f"{key}",
+                              f"{key} + "]
 
         positions = zip(pos_in_chain, delim_in_chain)
         for pos, delim in positions: 
