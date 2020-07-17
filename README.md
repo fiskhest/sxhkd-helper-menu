@@ -2,7 +2,7 @@
 
 kbhelper -- Easily discover and execute sxhkd keybindings, inspired by [Hotkey-Helper](https://github.com/Triagle/hotkey-helper)
 
-<gif img here>
+![kbrmenu usage](showcase-kbrmenu.gif)
 
 # What this is
 kbhelper is a python utility that parses `sxhkdhrc`-files for valid blocks of keybinds to create a documented list
@@ -15,7 +15,7 @@ To set this up inside your $SHELL (make sure that `${HOME}/.local/bin/` is locat
 
 ```sh
 $ mkdir -p ${HOME}/.local/bin/
-$ wget https://github.com/fiskhest/kbrmenu/src/branch/master/kbhelper.py -O ${HOME}/.local/bin/kbhelper.py
+$ wget https://raw.githubusercontent.com/fiskhest/kbrmenu/master/kbhelper.py -O ${HOME}/.local/bin/kbhelper.py
 ```
 
 # sxhkdrc setup
@@ -151,7 +151,7 @@ python kbhelper.py -e "$(python kbhelper.py -p | rofi -p Hotkeys -i -dmenu -widt
 If you wish to use the bundled `kbrmenu`, installation is as simple as:
 
 ```sh
-$ wget https://github.com/fiskhest/kbrmenu/src/branch/master/kbrmenu -O ${HOME}/.local/bin/kbrmenu
+$ wget https://raw.githubusercontent.com/fiskhest/kbrmenu/master/kbrmenu -O ${HOME}/.local/bin/kbrmenu
 ```
 
 create a bind in your sxhkd-configuration:
