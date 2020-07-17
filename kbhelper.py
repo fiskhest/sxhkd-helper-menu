@@ -28,7 +28,7 @@ class sxhkd_helper:
 
 
     def _transform_block(self, block):
-        """ transform an eligible block of keybind into a list of three elements which is returned for further 
+        """ transform an eligible block of keybind into a list of three elements which is returned for further
         processing.
         elem 1: comment/declaration of keybind usage
         elem 2: assigned keystrokes
@@ -52,7 +52,7 @@ class sxhkd_helper:
     def _parse_keybinds(self):
         """ take the raw configuration from config and parses all eligible blocks, unchaining keychains and returning
         a list of unpacked commands """
-        block_regex = self.descr + r"[\w\s\(\),\-\/&{}]+\n[\w\s+\d{}_\-,;]+\n[\s+\t]+[\w\s\-_$'\\~%{,!.\/\(\)};\"\n]+\n\n"
+        block_regex = self.descr + r"[\w\s\(\),\-\/&{}_\-,;:]+\n[\w\s+\d{}_\-,;:]+\n[\s+\t]+[\w\s\-_$'\\~%{,!.\/\(\)};\"\n]+\n\n"
         eligible_blocks = re.findall(block_regex, self._get_raw_config())
         unchained_lines = list()
         return_keybinds = list()
@@ -74,43 +74,64 @@ class sxhkd_helper:
         lines[0] = lines[0].strip(self.descr)
         lines[2] = lines[2].rstrip()
 
-        for line in lines:
+        for index, line in enumerate(lines):
             chain = re.search(r'(?<={).*(?=})', line)
             if chain:
                 any_chain = True
-                return_lines.append(self._unchain(chain.group(0), line))
+                return_lines.append(self._unchain(chain.group(0), line, index))
             else:
                 return_lines.append([line])
 
         if any_chain and len(return_lines) == 1:
             exit("A keychain denoting multiple segments was specified for the keybind, but no matching cmdchain exists. Fix your sxhkdrc")
 
+        # ensure all sublists in return_lines have the same length by filling the sublist with a copy of the first item 
+        maxlen = 0
+        for index, line in enumerate(return_lines):
+            if len(line) >= maxlen:
+                maxlen = len(line)
+
+            else:
+                for _ in range(0, maxlen-1):
+                    return_lines[index].append(return_lines[index][0]) 
+
         return return_lines
 
 
-    def _unchain(self, keys, line):
-        """ takes a list of keys or commands and the original line, returning a new list of unpacked keybinds """
+    def _unchain(self, keys, line, index):
+        """ takes a list of keys or commands, the original line and the line index (in the block), returning a new list of unpacked keybinds """
         lines = list()
 
         keys = re.sub(r'\s', '', keys)
 
-        for key in keys.split(','):
-            lines.append(self._delim_segment(key, line))
+        if ',' in keys:
+            for key in keys.split(','):
+                lines.append(self._delim_segment(key, line, index))
+        elif '-' in keys:
+            key = keys.split('-')
+            for index in range(int(key[0]), int(key[-1])+1):
+                lines.append(self._delim_segment(str(index), line, index))
 
         return lines
 
 
-    def _delim_segment(self, key, line):
+    def _delim_segment(self, key, line, index):
         """ places a delimiter (+, or '') at the previous keychain segment position (start of line, in the middle, end of line OR nothing if the line only contains keychains) """
         if '+' in key:
             key = re.sub(r'\+', '', key)
 
-        pos_in_chain = [r'^{.*}.', r'\s{.*}\s', r'{.*}$', r'^{.*}$', r'(?<=[\s\w]){\b(?!\+).*\b}(?=[\s\w])', r'(?<=[\s\w]){.*(?=\+).*}(?=[\s\w])']
-        delim_in_chain = [f"{key} + ", f" {key} + ", f"{key}", f"{key}", f"{key}", f"{key} + "]
-        positions = zip(pos_in_chain, delim_in_chain)
+        # for the first line (the comment), we don't want to put any delimiters in, no matter where in the line the chain is.
+        if index == 0:
+            pos_in_chain = [r'{.*}']
+            delim_in_chain = [f"{key}"]
 
+        else:
+            pos_in_chain = [r'{.*}\s(?!=\+)(?=\w)', r'{.*}\s+(?=\+)', r'.*{_}.*', r'(?<=\s){.*}(?=\s)', r'{.*}$', r'^{.*}$', r'(?<=[\s\w]){\b(?!\+).*\b}(?=[\s\w])', r'(?<=[\s\w]){.*(?=\+).*}(?=[\s\w])']
+            delim_in_chain = [f"{key} + ", f"{key} ", f"{key} + ", f"{key}", f"{key}", f"{key}", f"{key}", f"{key} + "]
+
+        positions = zip(pos_in_chain, delim_in_chain)
         for pos, delim in positions: 
-            match = re.search(pos, line)
+            match = re.search(pos, line, re.M)
             if match:
                 if '_' in key:  # check for wildcard
                     return re.sub(f'{pos}', '', line)
