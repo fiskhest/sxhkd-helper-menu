@@ -11,7 +11,7 @@ associating the description, the keybinding and the action to execute. It can be
 This program was written using Python 3.8, but should work for most (if not all) Python 3 releases.
 
 # Installation
-To set this up inside your $SHELL (make sure that ${HOME}/.local/bin/ is located somewhere within your $PATH):
+To set this up inside your $SHELL (make sure that `${HOME}/.local/bin/` is located somewhere within your `$PATH`, or alternatively specify a directory that is in your `$PATH` after -O: `wget [...] -O <directory>/kbhelper.py`):
 
 ```sh
 $ mkdir -p ${HOME}/.local/bin/
@@ -23,22 +23,21 @@ In order to use the program's functionality, you need to tweak your
 `sxhkdrc` to include special comments designed as documentation for
 keybindings.
 
-The special syntax for these documentation comments is any line beginning with the variable `descriptor`, which can
-be defined with `[--descriptor, -d]` or the shell variable `export descriptor='# '`, defaulting to `# ` if none is defined. Set these comments up above every keybinding you wish to document.
+The special syntax for these documentation comments is any line beginning with the value of the variable `descriptor`, which can
+be defined with [`--descriptor`, `-d`] or the shell variable `export descriptor='# '`, defaulting to `# ` if none is defined. Set these comments up above every keybinding you wish to document.
 
 ```
 # Example keybinding with documentation
 # Quit bspwm
 super + alt + Escape
+    bspc quit
 
 # This would show up in the formatted output as:
 Quit bspwm                                        super + alt + Escape                              bspc quit
-
 ```
 
-Additionally, `{}` can be used to unpack keychains mapping multiple segments
-of description to keybind and action. If the preceeding description does not contain any keychains, all unpacked
-lines will get the same description.
+Additionally, `{}` can be used to unpack keychains mapping multiple segments of description to keybind and action.
+**If the preceeding description does not contain any keychains, all unpacked lines will get the same description.**
 
 ```
 # Example of segmented documentation
@@ -53,17 +52,17 @@ Move the current window up                        super + k                     
 Move the current window right                     super + l                                         bspc node -s east
 
 # Example of a keychain containing a range
-# Focus another workspace
+# Focus workspace {1-6}
 super + {1-6}
     bspc desktop -f '^{1-6}'
 
 # This would expand in output as:
-Focus another workspace                           super + 1                                         bspc desktop -f '^1'
-Focus another workspace                           super + 2                                         bspc desktop -f '^2'
-Focus another workspace                           super + 3                                         bspc desktop -f '^3'
-Focus another workspace                           super + 4                                         bspc desktop -f '^4'
-Focus another workspace                           super + 5                                         bspc desktop -f '^5'
-Focus another workspace                           super + 6                                         bspc desktop -f '^6'
+Focus workspace 1                                 super + 1                                         bspc desktop -f '^1'
+Focus workspace 2                                 super + 2                                         bspc desktop -f '^2'
+Focus workspace 3                                 super + 3                                         bspc desktop -f '^3'
+Focus workspace 4                                 super + 4                                         bspc desktop -f '^4'
+Focus workspace 5                                 super + 5                                         bspc desktop -f '^5'
+Focus workspace 6                                 super + 6                                         bspc desktop -f '^6'
 ```
 
 This allows for fast, compact documentation for keybindings of
@@ -73,32 +72,32 @@ arbitrary complexity.
 To use the program, run `kbhelper.py`. This will attempt to parse the configuration stored at the default location with the default descriptor, finally printing back to console (same as `--print`).
 
 ```
-./kbhelper.py
+python kbhelper.py
 ```
 
 Pass `--help` for a usage table:
 
 ```
-usage: kbhelper.py [-h] [-c CONFIG] [-d DESCRIPTOR] [-e] [-ks KEYSTROKE] [-p]
-                   [-r]
+usage: kbhelper.py [-h] [-f FILE] [-d DESCRIPTOR] [-e EXEC] [-p] [-m] [-r]
 
-keybind helper - standalone sxhkd configuration parser and keystroke runner
+keybind helper - sxhkd configuration parser and keystroke runner
 
 optional arguments:
   -h, --help            show this help message and exit
-  -c CONFIG, --config CONFIG
-                        Configurationfile location
+  -f FILE, --file FILE  path to configuration file
   -d DESCRIPTOR, --descriptor DESCRIPTOR
                         comment descriptor
-  -e, --exec            execute the passed shortcut
+  -e EXEC, --exec EXEC  execute the passed shortcut
   -p, --print           Print fully unpacked keybind table
+  -m, --markdown        Print fully unpacked keybind table in markdown format(for cheatsheets)
   -r, --raw             Print the raw configuration
+
 ```
 
-By default, `kbhelper` will look for a sxhkdrc in `~/.config/sxhkd/sxhkdrc`, but can be overridden by passing a path to the [--file, -f] argument or the shell variable `sxhkd_config=$CFGPATH/sxhkdrc`,
+By default, `kbhelper` will look for sxhkdrc in `~/.config/sxhkd/sxhkdrc`, but can be overridden by passing a path to the [`--file`, `-f`] argument or the shell variable `sxhkd_config=$CFGPATH/sxhkdrc`,
 
 ```sh
-python kbhelper.py -c path/to/sxhkdrc
+python kbhelper.py -f path/to/sxhkdrc
 ```
 
 This will print an unpacked table of possible keybinds. passing [--exec,-e] instead executes the action defined for that keystroke (if one was found)
@@ -137,7 +136,7 @@ By running `python kbhelper.py --exec`, you can execute a command associated wit
 the above configuration `super + w` is bound to closing a window. Therefore, executing the following will close a window, as expected:
 
 ```sh
-kbhelper.py --exec "super + w"
+python kbhelper.py --exec "super + w"
 ```
 
 By combining the `--print` flag, and the `--exec` flag, you can create a relatively
@@ -146,7 +145,7 @@ having `kbhelper.py --exec` run the output of the hotkeys searching script from
 earlier. A simple bash helper script `kbrmenu` is bundled with this repo, essentially doing the following:
 
 ```sh
-kbhelper.py -e "$(kbhelper.py -p | rofi -p Hotkeys -i -dmenu -width 75 | grep -Po '(?<=\s\s)(?=\S).*(?=\b\s\s)(?!$)')"
+python kbhelper.py -e "$(python kbhelper.py -p | rofi -p Hotkeys -i -dmenu -width 75 | grep -Po '(?<=\s\s)(?=\S).*(?=\b\s\s)(?!$)')"
 ```
 
 If you wish to use the bundled `kbrmenu`, installation is as simple as:
