@@ -4,6 +4,7 @@ import re
 import argparse
 import sys
 from itertools import zip_longest
+from copy import copy
 
 HOME = os.getenv('HOME')
 config_file_location = os.getenv('sxhkd_config', f'{HOME}/.config/sxhkd/sxhkdrc')
@@ -104,13 +105,19 @@ class sxhkd_helper:
 
         keys = re.sub(r'\s', '', keys)
 
+        if re.search(r'\d+-\d+', keys):
+            dash_keys = copy(keys)
+            key = dash_keys.split('-')
+            start_of_range = int(key[0])
+            end_of_range = int(re.sub(r',.*', '', key[-1]))
+            for range_index in range(start_of_range, end_of_range + 1):
+                lines.append(self._delim_segment(str(range_index), line, index))
+
         if ',' in keys:
-            for key in keys.split(','):
+            comma_keys = copy(keys)
+            comma_keys = re.sub(r'\d+-\d+,', '', comma_keys)
+            for key in comma_keys.split(','):
                 lines.append(self._delim_segment(key, line, index))
-        elif '-' in keys:
-            key = keys.split('-')
-            for index in range(int(key[0]), int(key[-1])+1):
-                lines.append(self._delim_segment(str(index), line, index))
 
         return lines
 
@@ -134,7 +141,8 @@ class sxhkd_helper:
                             r'{.*}$',
                             r'^{.*}$',
                             r'(?<=[\s\w]){\b(?!\+).*\b}(?=[\s\w])',
-                            r'(?<=[\s\w]){.*(?=\+).*}(?=[\s\w])']
+                            r'(?<=[\s\w]){.*(?=\+).*}(?=[\s\w])',
+                            r'(?<=\S){.*}(?=\S)']
 
             delim_in_chain = [f"{key} + ",
                               f"{key} ",
@@ -144,7 +152,8 @@ class sxhkd_helper:
                               f"{key}",
                               f"{key}",
                               f"{key}",
-                              f"{key} + "]
+                              f"{key} + ",
+                              f"{key}"]
 
         positions = zip(pos_in_chain, delim_in_chain)
         for pos, delim in positions: 
