@@ -53,8 +53,8 @@ class sxhkd_helper:
     def _parse_keybinds(self):
         """ take the raw configuration from config and parses all eligible blocks, unchaining keychains and returning
         a list of unpacked commands """
-        block_regex = self.descr + r"[\w\s\(\),\-\/&{}_\-,;:]+\n[\w\s+\d{}_\-,;:]+\n[\s+\t]+[\w\s\-_$'\\~%{,!.\/\(\)};\"\n\^]+\n+"
-        eligible_blocks = re.findall(block_regex, self._get_raw_config())
+        block_regex = r"^" + self.descr + r"[\w\s\(\),\-\/&{}_\-,;:]+\n[\w\s+\d{}_\-,;:]+\n[\s+\t]+[\w\$()]+.*"
+        eligible_blocks = re.findall(block_regex, self._get_raw_config(), flags=re.M)
         unchained_lines = list()
         return_keybinds = list()
         for block in eligible_blocks:
@@ -103,7 +103,15 @@ class sxhkd_helper:
         """ takes a list of keys or commands, the original line and the line index (in the block), returning a new list of unpacked keybinds """
         lines = list()
 
-        keys = re.sub(r'\s', '', keys)
+        keys = re.sub(r'\s\+\s', '', keys)
+
+        # todo: DRY // KISS
+        if re.search(r'^\w-\w$', keys):
+            dash_keys = copy(keys)
+            key = dash_keys.split('-')
+            character_range = map(chr, range(ord(key[0]), ord(key[-1])+1))
+            for range_index in character_range:
+                lines.append(self._delim_segment(range_index, line, index))
 
         if re.search(r'\d+-\d+', keys):
             dash_keys = copy(keys)
