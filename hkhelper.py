@@ -10,7 +10,7 @@ HOME = os.getenv('HOME')
 config_file_location = os.getenv('sxhkd_config', f'{HOME}/.config/sxhkd/sxhkdrc')
 descriptor = os.getenv('descriptor', '# ')
 
-parser = argparse.ArgumentParser(description='keybind helper - standalone sxhkd configuration parser and keystroke runner')
+parser = argparse.ArgumentParser(description='hotkey helper - standalone sxhkd configuration parser and keystroke runner')
 parser.add_argument('-f', '--file', default=f'{config_file_location}', help='path to configuration file')
 parser.add_argument('-d', '--descriptor', default=f'{descriptor}', help='comment descriptor')
 parser.add_argument('-e', '--exec', default=False, help='execute the passed shortcut')
@@ -122,7 +122,7 @@ class sxhkd_helper:
 
         if ',' in keys:
             comma_keys = copy(keys)
-            comma_keys = re.sub(r'[\w\d]+-[\w\d]+,', '', comma_keys)
+            comma_keys = re.sub(r'^[\w\d]+-[\w\d]+,', '', comma_keys)
             for key in comma_keys.split(','):
                 lines.append(self._delim_segment(key, line, index))
 

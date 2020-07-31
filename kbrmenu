@@ -1,6 +1,0 @@
-#!/usr/bin/env bash
-
-SCRIPT_DIR="$(dirname "$(readlink -f "$0")")"
-
-${SCRIPT_DIR}/kbhelper.py -e "$(${SCRIPT_DIR}/kbhelper.py -p | rofi -font "Terminus 24" -p Hotkeys -i -dmenu -width 75 | grep -Po '(?<=\s\s)(?=\S).*(?=\b\s\s)(?!$)')"
-
