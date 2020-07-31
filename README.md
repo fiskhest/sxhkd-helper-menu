@@ -1,21 +1,21 @@
-# keybind helper - standalone sxhkd configuration parser and keybind runner
+# HotKey Helper  - standalone sxhkd configuration parser and keybind runner
 
-kbhelper -- Easily discover and execute sxhkd keybindings, inspired by [Hotkey-Helper](https://github.com/Triagle/hotkey-helper)
+rofi HotKey helper/menu -- Easily discover and execute sxhkd keybindings, inspired by [Hotkey-Helper](https://github.com/Triagle/hotkey-helper)
 
-![kbrmenu usage](showcase-kbrmenu.gif)
+![rhkhmenu usage](showcase-rhkhmenu.gif)
 
 # What this is
-kbhelper is a python utility that parses `sxhkdhrc`-files for valid blocks of keybinds to create a documented list
+hkhelper is a python utility that parses `sxhkdhrc`-files for valid blocks of keybinds to create a documented list
 associating the description, the keybinding and the action to execute. It can be used in conjunction with rofi/dmenu to have a fuzzy searchable cheatsheet of your configured keybinds.
 
 This program was written using Python 3.8, but should work for most (if not all) Python 3 releases.
 
 # Installation
-To set this up inside your $SHELL (make sure that `${HOME}/.local/bin/` is located somewhere within your `$PATH`, or alternatively specify a directory that is in your `$PATH` after -O: `wget [...] -O <directory>/kbhelper.py`):
+To set this up inside your $SHELL (make sure that `${HOME}/.local/bin/` is located somewhere within your `$PATH`, or alternatively specify a directory that is in your `$PATH` after -O: `wget [...] -O <directory>/hkhelper.py`):
 
 ```sh
 $ mkdir -p ${HOME}/.local/bin/
-$ wget https://raw.githubusercontent.com/fiskhest/kbrmenu/master/kbhelper.py -O ${HOME}/.local/bin/kbhelper.py
+$ wget https://raw.githubusercontent.com/fiskhest/rhkhm/master/hkhelper.py -O ${HOME}/.local/bin/hkhelper.py
 ```
 
 # sxhkdrc setup
@@ -52,9 +52,9 @@ Move the current window up                        super + k                     
 Move the current window right                     super + l                                         bspc node -s east
 
 # Example of a keychain containing a range
-# Focus workspace {1-6}
-super + {1-6}
-    bspc desktop -f '^{1-6}'
+# Focus workspace {1-6,9}
+super + {1-6,9}
+    bspc desktop -f '^{1-6,9}'
 
 # This would expand in output as:
 Focus workspace 1                                 super + 1                                         bspc desktop -f '^1'
@@ -63,22 +63,23 @@ Focus workspace 3                                 super + 3                     
 Focus workspace 4                                 super + 4                                         bspc desktop -f '^4'
 Focus workspace 5                                 super + 5                                         bspc desktop -f '^5'
 Focus workspace 6                                 super + 6                                         bspc desktop -f '^6'
+Focus workspace 9                                 super + 6                                         bspc desktop -f '^6'
 ```
 
 This allows for fast, compact documentation for keybindings of
 arbitrary complexity.
 
 # Usage
-To use the program, run `kbhelper.py`. This will attempt to parse the configuration stored at the default location with the default descriptor, finally printing back to console (same as `--print`).
+To use the program, run `hkhelper.py`. This will attempt to parse the configuration stored at the default location with the default descriptor, finally printing back to console (same as `--print`).
 
 ```
-python kbhelper.py
+python hkhelper.py
 ```
 
 Pass `--help` for a usage table:
 
 ```
-usage: kbhelper.py [-h] [-f FILE] [-d DESCRIPTOR] [-e EXEC] [-p] [-m] [-r]
+usage: hkhelper.py [-h] [-f FILE] [-d DESCRIPTOR] [-e EXEC] [-p] [-m] [-r]
 
 keybind helper - sxhkd configuration parser and keystroke runner
 
@@ -94,10 +95,10 @@ optional arguments:
 
 ```
 
-By default, `kbhelper` will look for sxhkdrc in `~/.config/sxhkd/sxhkdrc`, but can be overridden by passing a path to the [`--file`, `-f`] argument or the shell variable `sxhkd_config=$CFGPATH/sxhkdrc`,
+By default, `hkhelper` will look for sxhkdrc in `~/.config/sxhkd/sxhkdrc`, but can be overridden by passing a path to the [`--file`, `-f`] argument or the shell variable `sxhkd_config=$CFGPATH/sxhkdrc`,
 
 ```sh
-python kbhelper.py -f path/to/sxhkdrc
+python hkhelper.py -f path/to/sxhkdrc
 ```
 
 This will print an unpacked table of possible keybinds. passing [--exec,-e] instead executes the action defined for that keystroke (if one was found)
@@ -132,31 +133,31 @@ This output can be piped to tools such as rofi or dmenu for further processing.
 Doing this with a program like rofi allows for powerful searching of
 hotkeys on the system.
 
-By running `python kbhelper.py --exec`, you can execute a command associated with a keybinding. For instance, from
+By running `python hkhelper.py --exec`, you can execute a command associated with a keybinding. For instance, from
 the above configuration `super + w` is bound to closing a window. Therefore, executing the following will close a window, as expected:
 
 ```sh
-python kbhelper.py --exec "super + w"
+python hkhelper.py --exec "super + w"
 ```
 
 By combining the `--print` flag, and the `--exec` flag, you can create a relatively
 powerful system for discovery and remembering your keybindings by
-having `kbhelper.py --exec` run the output of the hotkeys searching script from
-earlier. A simple bash helper script `kbrmenu` is bundled with this repo, essentially doing the following:
+having `hkhelper.py --exec` run the output of the hotkeys searching script from
+earlier. A simple bash helper script `rhkhmenu` is bundled with this repo, essentially doing the following:
 
 ```sh
-python kbhelper.py -e "$(python kbhelper.py -p | rofi -p Hotkeys -i -dmenu -width 75 | grep -Po '(?<=\s\s)(?=\S).*(?=\b\s\s)(?!$)')"
+python hkhelper.py -e "$(python hkhelper.py -p | rofi -p Hotkeys -i -dmenu -width 75 | grep -Po '(?<=\s\s)(?=\S).*(?=\b\s\s)(?!$)')"
 ```
 
-If you wish to use the bundled `kbrmenu`, installation is as simple as:
+If you wish to use the bundled `rhkhmenu`, installation is as simple as:
 
 ```sh
-$ wget https://raw.githubusercontent.com/fiskhest/kbrmenu/master/kbrmenu -O ${HOME}/.local/bin/kbrmenu
+$ wget https://raw.githubusercontent.com/fiskhest/rhkhm/master/rhkhmenu -O ${HOME}/.local/bin/rhkhmenu
 ```
 
 create a bind in your sxhkd-configuration:
 ```sh
 # Display keybind rofi menu
 super + b
-    ${HOME}/.local/bin/kbrmenu
+    ${HOME}/.local/bin/rhkhmenu
 ```
