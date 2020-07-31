@@ -53,7 +53,7 @@ class sxhkd_helper:
     def _parse_keybinds(self):
         """ take the raw configuration from config and parses all eligible blocks, unchaining keychains and returning
         a list of unpacked commands """
-        block_regex = r"^" + self.descr + r"[\w\s\(\),\-\/&{}_\-,;:]+\n[\w\s+\d{}_\-,;:]+\n[\s+\t]+[\w\$()]+.*"
+        block_regex = r"^" + self.descr + r"[\w\s\(\),\-\/&{}_\-,;:]+\n[\w\s+\d{}_\-,;:]+\n[\s+\t]+[\w\$()\~\-,{}/;]+.*"
         eligible_blocks = re.findall(block_regex, self._get_raw_config(), flags=re.M)
         unchained_lines = list()
         return_keybinds = list()
@@ -105,25 +105,24 @@ class sxhkd_helper:
 
         keys = re.sub(r'\s\+\s', '', keys)
 
-        # todo: DRY // KISS
-        if re.search(r'^\w-\w$', keys):
-            dash_keys = copy(keys)
-            key = dash_keys.split('-')
-            character_range = map(chr, range(ord(key[0]), ord(key[-1])+1))
+        copy_keys = copy(keys)
+        if re.search(r'^[a-zA-Z]-[a-zA-Z][,$]', keys):
+            copy_keys = re.sub(r'(?<=\w)[\,\w]+', '', copy_keys)
+            copy_keys = copy_keys.split('-')
+            character_range = map(chr, range(ord(copy_keys[0]), ord(copy_keys[-1])+1))
             for range_index in character_range:
                 lines.append(self._delim_segment(range_index, line, index))
 
-        if re.search(r'\d+-\d+', keys):
-            dash_keys = copy(keys)
-            key = dash_keys.split('-')
-            start_of_range = int(key[0])
-            end_of_range = int(re.sub(r',.*', '', key[-1]))
+        elif re.search(r'\d+-\d+', keys):
+            copy_keys = copy_keys.split('-')
+            start_of_range = int(copy_keys[0])
+            end_of_range = int(re.sub(r',.*', '', copy_keys[-1]))
             for range_index in range(start_of_range, end_of_range + 1):
                 lines.append(self._delim_segment(str(range_index), line, index))
 
         if ',' in keys:
             comma_keys = copy(keys)
-            comma_keys = re.sub(r'\d+-\d+,', '', comma_keys)
+            comma_keys = re.sub(r'[\w\d]+-[\w\d]+,', '', comma_keys)
             for key in comma_keys.split(','):
                 lines.append(self._delim_segment(key, line, index))
 
@@ -141,6 +140,7 @@ class sxhkd_helper:
             delim_in_chain = [f"{key}"]
 
         else:
+            # TODO: yeah, so... a thing happened.
             pos_in_chain = [r'{.*}\s(?!=\+)(?=\w)',
                             r'{.*}\s+(?=\+)',
                             r'.*{_}.*',
@@ -148,8 +148,10 @@ class sxhkd_helper:
                             r'(?<=\s){.*}(?=\s)',
                             r'{.*}$',
                             r'^{.*}$',
-                            r'(?<=[\s\w]){\b(?!\+).*\b}(?=[\s\w])',
-                            r'(?<=[\s\w]){.*(?=\+).*}(?=[\s\w])',
+                            r'{(?<=[\s\w]){\b(?!\+).*\b}(?=[\s\w])}',
+                            r'{(?<=[\s\w]){.*(?=\+).*}(?=[\s\w])}',
+                            r'{\b_}',
+                            r'{_,.*}',
                             r'(?<=\S){.*}(?=\S)']
 
             delim_in_chain = [f"{key} + ",
@@ -161,17 +163,22 @@ class sxhkd_helper:
                               f"{key}",
                               f"{key}",
                               f"{key} + ",
+                              f"",
+                              f"{key} + ",
                               f"{key}"]
 
         positions = zip(pos_in_chain, delim_in_chain)
+        # search keychain for possible delimiter position and transform the line to make sense
         for pos, delim in positions: 
             match = re.search(pos, line, re.M)
             if match:
-                if '_' in key:  # check for wildcard
+                # just return nothing if we struck a wildcard
+                if key == '_':
                     return re.sub(f'{pos}', '', line)
-                return re.sub(f'{pos}', f'{delim}', line)
+                return re.sub(rf'{pos}', rf'{delim}', line)
 
-        return line
+        # if no special rules was found to match, fallback to return the key sent into the script
+        return key
     
 def print_keybinds(config):
     """ print all parsed and unpacked keybinds to console """
