@@ -18,6 +18,6 @@ setuptools.setup(
         "License :: OSI Approved :: MIT License",
         "Operating System :: OS Independent",
     ],
-    scripts=['bin/install.sh']
+    scripts=['bin/install.sh'],
     python_requires='>=3.6',
 )
