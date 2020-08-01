@@ -1,6 +1,5 @@
 #!/usr/bin/env bash
 
-set -x
 SCRIPT_DIR="$(dirname "$(readlink -f "$0")")"
 
 ${SCRIPT_DIR}/hkhelper.py -e "$(${SCRIPT_DIR}/hkhelper.py -p | rofi -sort -dmenu -sorting-method fzf -font "Terminus 24" -p Hotkeys -i -width 75 -matching normal -only-match | grep -Po '(?<=\s\s)(?=\S).*(?=\b\s\s)(?!$)')"
