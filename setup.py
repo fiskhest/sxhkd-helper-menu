@@ -5,7 +5,7 @@ with open("README.md", "r") as fh:
 
 setuptools.setup(
     name="rhkhm",
-    version="0.0.6",
+    version="0.1.0",
     author="Johan Radivoj",
     author_email="johan+rhkhm@radivoj.se",
     description="HotKey helper for sxhkd",
@@ -18,6 +18,11 @@ setuptools.setup(
         "License :: OSI Approved :: MIT License",
         "Operating System :: OS Independent",
     ],
-    console_scripts=['hkhelper.py = rhkhm.main'],
+    entry_points={
+        "console_scripts": [
+            'hkhelper.py = rhkhm:main'
+        ],
+    },
+    scripts=['rhkhmenu'],
     python_requires='>=3.6',
 )

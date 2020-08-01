@@ -26,15 +26,15 @@ To set this up inside your $SHELL (make sure that `${HOME}/.local/bin/` is locat
 
 ```sh
 $ mkdir -p ${HOME}/.local/bin/
-$ wget https://raw.githubusercontent.com/fiskhest/rhkhm/raw/master/__init__.py -O ${HOME}/.local/bin/hkhelper.py
+$ wget https://raw.githubusercontent.com/fiskhest/rhkhm/master/rhkhm/__init__.py -O ${HOME}/.local/bin/hkhelper.py
 ```
 
-You can also clone the repo and use the bundled bash install script:
+You can also clone the repo and use the bundled install script:
 
 ```sh
 $ cd /tmp/
-$ git clone https://github.com/fiskhest/rhkhm/ && cd rhkhm/bin/
-$ ./install.sh
+$ git clone https://github.com/fiskhest/rhkhm/ && cd rhkhm/
+$ python setup.py install
 ```
 
 # sxhkdrc setup
@@ -100,7 +100,7 @@ Pass `--help` for a usage table:
 ```
 usage: hkhelper.py [-h] [-f FILE] [-d DESCRIPTOR] [-e EXEC] [-p] [-m] [-r]
 
-keybind helper - sxhkd configuration parser and keystroke runner
+hotkey helper - standalone sxhkd configuration parser and keystroke runner
 
 optional arguments:
   -h, --help            show this help message and exit

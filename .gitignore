@@ -1,1 +1,3 @@
-rhkhm/__pycache__/*
+rhkhm/__pycache__
+build/
+dist/
