@@ -10,14 +10,6 @@ HOME = os.getenv('HOME')
 config_file_location = os.getenv('sxhkd_config', f'{HOME}/.config/sxhkd/sxhkdrc')
 descriptor = os.getenv('descriptor', '# ')
 
-parser = argparse.ArgumentParser(description='hotkey helper - standalone sxhkd configuration parser and keystroke runner')
-parser.add_argument('-f', '--file', default=f'{config_file_location}', help='path to configuration file')
-parser.add_argument('-d', '--descriptor', default=f'{descriptor}', help='comment descriptor')
-parser.add_argument('-e', '--exec', default=False, help='execute the passed shortcut')
-parser.add_argument('-p', '--print', default='true', action='store_true', help='Print fully unpacked keybind table')
-parser.add_argument('-m', '--markdown', action='store_true', help='Print fully unpacked keybind table in markdown format(for cheatsheets)')
-parser.add_argument('-r', '--raw', action='store_true', help='Print the raw configuration')
-
 
 class sxhkd_helper:
     """ instance helper args and functions """
@@ -204,7 +196,16 @@ def execute_cmd(config, keystroke):
         if keystroke == keybind:
             subprocess.run([f'{cmd}'], shell=True)
 
-def main(args):
+def main():
+    parser = argparse.ArgumentParser(description='hotkey helper - standalone sxhkd configuration parser and keystroke runner')
+    parser.add_argument('-f', '--file', default=f'{config_file_location}', help='path to configuration file')
+    parser.add_argument('-d', '--descriptor', default=f'{descriptor}', help='comment descriptor')
+    parser.add_argument('-e', '--exec', default=False, help='execute the passed shortcut')
+    parser.add_argument('-p', '--print', default='true', action='store_true', help='Print fully unpacked keybind table')
+    parser.add_argument('-m', '--markdown', action='store_true', help='Print fully unpacked keybind table in markdown format(for cheatsheets)')
+    parser.add_argument('-r', '--raw', action='store_true', help='Print the raw configuration')
+    args = parser.parse_args()
+
     config = sxhkd_helper(args.file, args.descriptor)
 
     # only execute if --exec was passed with an actual value
@@ -223,5 +224,4 @@ def main(args):
         
 
 if __name__ == '__main__':
-    args = parser.parse_args()
-    main(args)
+    main()
