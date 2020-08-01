@@ -11,11 +11,30 @@ associating the description, the keybinding and the action to execute. It can be
 This program was written using Python 3.8, but should work for most (if not all) Python 3 releases.
 
 # Installation
+# AUR
+```sh
+sudo aura -A rhkhm-git
+```
+
+# PyPI
+```sh
+pip install --user rhkhm
+```
+
+# manual install from git repo
 To set this up inside your $SHELL (make sure that `${HOME}/.local/bin/` is located somewhere within your `$PATH`, or alternatively specify a directory that is in your `$PATH` after -O: `wget [...] -O <directory>/hkhelper.py`):
 
 ```sh
 $ mkdir -p ${HOME}/.local/bin/
-$ wget https://raw.githubusercontent.com/fiskhest/rhkhm/master/hkhelper.py -O ${HOME}/.local/bin/hkhelper.py
+$ wget https://raw.githubusercontent.com/fiskhest/rhkhm/raw/master/__init__.py -O ${HOME}/.local/bin/hkhelper.py
+```
+
+You can also clone the repo and use the bundled bash install script:
+
+```sh
+$ cd /tmp/
+$ git clone https://github.com/fiskhest/rhkhm/ && cd rhkhm/bin/
+$ ./install.sh
 ```
 
 # sxhkdrc setup
