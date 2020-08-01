@@ -22,7 +22,7 @@ pip install --user rhkhm
 ```
 
 # manual install from git repo
-To set this up inside your $SHELL (make sure that `${HOME}/.local/bin/` is located somewhere within your `$PATH`, or alternatively specify a directory that is in your `$PATH` after -O: `wget [...] -O <directory>/hkhelper.py`):
+To set this up inside your `$SHELL` (make sure that `${HOME}/.local/bin/` is located somewhere within your `$PATH`, or alternatively specify a directory that is in your `$PATH` after -O: `wget [...] -O <directory>/hkhelper.py`):
 
 ```sh
 $ mkdir -p ${HOME}/.local/bin/
@@ -171,6 +171,7 @@ python hkhelper.py -e "$(python hkhelper.py -p | rofi -p Hotkeys -i -dmenu -widt
 If you wish to use the bundled `rhkhmenu`, installation is as simple as:
 
 ```sh
+# skip this if you used any installation method
 $ wget https://raw.githubusercontent.com/fiskhest/rhkhm/master/rhkhmenu -O ${HOME}/.local/bin/rhkhmenu
 ```
 
@@ -178,5 +179,17 @@ create a bind in your sxhkd-configuration:
 ```sh
 # Display keybind rofi menu
 super + b
-    ${HOME}/.local/bin/rhkhmenu
+    rhkhmenu
+    # if you installed manually by wgetting the files:
+    # ${HOME}/.local/bin/rhkhmenu
 ```
+
+# misc
+There are sure to be some bugs and use cases that wasn't foreseeable. PR's and issues are gladly appreciated!
+
+Alternative: [dmenu-hotkey](https://github.com/maledorak/dmenu-hotkeys)
+
+Todo:
+- fix the horrible regex matching...
+- cleaner readme/installation instructions
+- pipeline
