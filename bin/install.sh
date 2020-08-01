@@ -1,6 +1,5 @@
 #!/usr/bin/env bash
 
-set -x
 fname="hkhelper.py"
 lbin="${HOME}/.local/bin"
 mkdir -p ${lbin}
