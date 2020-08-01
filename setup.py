@@ -5,7 +5,7 @@ with open("README.md", "r") as fh:
 
 setuptools.setup(
     name="rhkhm",
-    version="0.0.2",
+    version="0.0.3",
     author="Johan Radivoj",
     author_email="johan+rhkhm@radivoj.se",
     description="HotKey helper for sxhkd",
@@ -18,5 +18,6 @@ setuptools.setup(
         "License :: OSI Approved :: MIT License",
         "Operating System :: OS Independent",
     ],
+    scripts=['bin/install.sh']
     python_requires='>=3.6',
 )
