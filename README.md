@@ -2,7 +2,7 @@
 
 rofi HotKey helper/menu -- Easily discover and execute sxhkd keybindings, inspired by [Hotkey-Helper](https://github.com/Triagle/hotkey-helper)
 
-![rhkhmenu usage](showcase-rhkhmenu.gif)
+![rhkhm usage](showcase-rhkhm.gif)
 
 # What this is
 hkhelper is a python utility that parses `sxhkdhrc`-files for valid blocks of keybinds to create a documented list
