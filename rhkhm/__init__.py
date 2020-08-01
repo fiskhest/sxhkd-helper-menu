@@ -172,18 +172,18 @@ class sxhkd_helper:
         # if no special rules was found to match, fallback to return the key sent into the script
         return key
     
-def print_keybinds(config):
+def print_keybinds(config, column_width):
     """ print all parsed and unpacked keybinds to console """
     for bind in config.keybinds:
         original_desc, keybind, original_cmd = bind
-        print(f'{original_desc}\t{keybind}\t{original_cmd}'.expandtabs(50))
+        print(f'{original_desc}\t{keybind}\t{original_cmd}'.expandtabs(column_width))
 
 
 def print_markdown(config):
     """ print all parsed and unpacked keybinds to console in a markdown format """
     for bind in config.keybinds:
         original_desc, keybind, original_cmd = bind
-        print(f'`{original_desc}`\t`{keybind}`\t`{original_cmd}`'.expandtabs(55))
+        print(f'* `{keybind}`: {original_desc} - `{original_cmd}`')
 
 
 def execute_cmd(config, keystroke):
@@ -200,11 +200,13 @@ def main():
     parser = argparse.ArgumentParser(description='hotkey helper - standalone sxhkd configuration parser and keystroke runner')
     parser.add_argument('-f', '--file', default=f'{config_file_location}', help='path to configuration file')
     parser.add_argument('-d', '--descriptor', default=f'{descriptor}', help='comment descriptor')
-    parser.add_argument('-e', '--exec', default=False, help='execute the passed shortcut')
+    parser.add_argument('-e', '--exec', default=False, help='execute command bound to passed shortcut')
     parser.add_argument('-p', '--print', default='true', action='store_true', help='Print fully unpacked keybind table')
+    parser.add_argument('-t', '--tabexpand', default=50, help='set amount of cells to pad columns by')
     parser.add_argument('-m', '--markdown', action='store_true', help='Print fully unpacked keybind table in markdown format(for cheatsheets)')
-    parser.add_argument('-r', '--raw', action='store_true', help='Print the raw configuration')
+    parser.add_argument('-r', '--raw', action='store_true', help='Print raw configuration')
     args = parser.parse_args()
+    column_width = int(args.tabexpand)
 
     config = sxhkd_helper(args.file, args.descriptor)
 
@@ -220,7 +222,7 @@ def main():
         print_markdown(config)
 
     elif args.print:
-        print_keybinds(config)
+        print_keybinds(config, column_width=column_width)
         
 
 if __name__ == '__main__':
