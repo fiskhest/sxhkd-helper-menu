@@ -5,7 +5,8 @@ with open("README.md", "r") as fh:
 
 setuptools.setup(
     name="rhkhm",
-    version="0.1.2",
+    version_format='{tag}.dev{commitcount}+{gitsha}',
+    setup_requires=['setuptools-git-version'],
     author="Johan Radivoj",
     author_email="johan+rhkhm@radivoj.se",
     description="HotKey helper for sxhkd",
