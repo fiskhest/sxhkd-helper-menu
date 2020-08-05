@@ -1,0 +1,40 @@
+## test: range and comma-separated keychain (numbers)
+# focus workspace {1-6,8}
+super + {1-6,8}
+    bspc desktop -f '^{1-6,8}'
+
+## test: range and comma-separated keychain (letters)
+# focus workspace {a-c,e}
+super + {a-c,e}
+    bspc desktop -f '^{a-c,e}'
+
+## test: unicode support
+# Show clipboard history
+super + shift + v
+    clipboard-menu 📋📋
+
+## test: headers
+##---------- Keybindings for bspwm ----------##
+
+## test: contains multiple spaces
+# Launch {termite,dropdown terminal}
+super + {_,  shift + }Return
+    bspterm {_,-f}
+
+##---------- Rofi Launcher & Menus ----------##
+
+## test: special chars ()~/
+# App Launcher (also super)
+alt + F1
+    sh ~/.config/bspwm/rofi/bin/launcher
+
+## test: combine keychains, special chars, intermixing of many different use cases
+# Launch {hud menu,sublime,root launcher,powermenu,network menu,firefox,vscode,pcmanfm}
+super + e : {_,q,s,r,x,n,w,c,f}
+    {wildcard,qmenu_hud,subl,sh ~/.config/bspwm/rofi/bin/asroot,sh ~/.config/bspwm/rofi/bin/powermenu,sh ~/.config/bspwm/rofi/bin/network,firefox,code,pcmanfm} ; sleep 0.1 ; xdotool key Escape
+
+## test: same as above but (maybe? double check) different use cases
+# show {tray,layout,keybind,clip,pass} menu
+super + {d,y,b,c,v}
+    {bsptray,bsp-layout-menu,$HOME/.local/bin/rhkhmenu,clipmenu,rofi-pass}
+
