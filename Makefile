@@ -1,6 +1,20 @@
 SHELL := /bin/bash
 SCRIPT = rhkhm
-PKGVER = $(shell sed -n "s/^VERSION='\(.*\)'/\1/p" $(SCRIPT))
+PKGVER = $(shell sed -n "s/^\(.*\)/\1/p" VERSION)
+
+# ANSI terminal colors (see 'man tput') and
+# https://linuxtidbits.wordpress.com/2008/08/11/output-color-on-bash-scripts/
+#
+# Don't use color if there isn't a $TERM environment variable:
+ifneq ($(strip $(TERM)),)
+	BOLD=$(shell tput bold)
+	RED=$(shell tput setaf 1)
+	GREEN=$(shell tput setaf 2)
+	BLUE=$(shell tput setaf 4)
+	MAGENTA=$(shell tput setaf 5)
+	UL=$(shell tput sgr 0 1)
+	RESET=$(shell tput sgr0 )
+endif
 
 # 'sed -i' is not part of the POSIX standard, so it's different for macOS/BSD
 ifeq ($(shell uname -s | grep -qiE '(darwin|bsd)'; echo $$?),0)
@@ -8,6 +22,20 @@ ifeq ($(shell uname -s | grep -qiE '(darwin|bsd)'; echo $$?),0)
 else
 	SED_INPLACE = sed -i
 endif
+
+help:
+	@echo; \
+	echo "  $(UL)$(BOLD)$(BLUE)Makefile tasks for $(SCRIPT) v$(PKGVER)$(RESET)"; \
+	echo; \
+	echo "    $(BOLD)make help$(RESET)                   - ($(GREEN)default$(RESET)) you're looking at it ;-)"; \
+	echo; \
+	echo "    $(BOLD)make install$(RESET)                - install '$(SCRIPTNAME)' to '$(BINDEST)'"; \
+	echo; \
+	echo "    $(BOLD)make release VERSION=$(MAGENTA)x.y.z$(RESET)  - create release for '$(SCRIPTNAME)' at version $(MAGENTA)x.y.z$(RESET)"; \
+	echo; \
+	echo; \
+	echo "  For more help, see $(READMEURL)"; \
+	echo
 
 all: tests build publish
 
@@ -53,8 +81,8 @@ else
 		exit 1; \
 	fi
 	# replace version string in all target dependencies
-	# '$^' below means "the names of all the prerequisites"
-	$(SED_INPLACE) "s/^\(VERSION=\)'\(.*\)'/\1'$(VERSION)'/" $^
+	@# '$^' below means "the names of all the prerequisites"
+	$(SED_INPLACE) "s/^\(.*\)/$(VERSION)/p" $^
 	git add $^ && git commit -m'Release v$(VERSION)'
 	git tag -a v$(VERSION)
 	git push --all
