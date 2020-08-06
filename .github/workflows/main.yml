@@ -5,7 +5,7 @@ on:
 
 jobs:
   build-n-publish:
-    - name: Build and publish Python 🐍 distributions 📦
+    name: Build and publish Python 🐍 distributions 📦
     runs-on: ubuntu-18.04
     steps:
     - uses: actions/checkout@master
