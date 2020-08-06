@@ -139,11 +139,11 @@ class sxhkd_helper:
                             r'{\d+-\d+}',
                             r'(?<=\s){.*}(?=\s)',
                             r'{.*}$',
+                            r'{_,.*}',
                             r'^{.*}$',
                             r'{(?<=[\s\w]){\b(?!\+).*\b}(?=[\s\w])}',
                             r'{(?<=[\s\w]){.*(?=\+).*}(?=[\s\w])}',
                             r'{\b_}',
-                            r'{_,.*}',
                             r'(?<=\S){.*}(?=\S)']
 
             delim_in_chain = [f"{key} + ",
@@ -152,11 +152,11 @@ class sxhkd_helper:
                               f"{key}",
                               f"{key}",
                               f"{key}",
+                              f"{key} + ",
                               f"{key}",
                               f"{key}",
                               f"{key} + ",
                               f"",
-                              f"{key} + ",
                               f"{key}"]
 
         positions = zip(pos_in_chain, delim_in_chain)
@@ -164,6 +164,10 @@ class sxhkd_helper:
         for pos, delim in positions: 
             match = re.search(pos, line, re.M)
             if match:
+                # bugfix chains containing one or more spaces: {key1, key2}, strip the leading space(s),
+                #   and anywhere two or more spaces is seen, replace by one single space
+                delim = delim.lstrip()
+                delim = re.sub(r'\s\s+', ' ', delim)
                 # just return nothing if we struck a wildcard
                 if key == '_':
                     return re.sub(f'{pos}', '', line)

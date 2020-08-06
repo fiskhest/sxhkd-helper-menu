@@ -1,0 +1,27 @@
+on:
+  push:
+    tags:
+      - 'v[0-9]+.[0-9]+.[0-9]+*'
+
+jobs:
+  build-n-publish:
+    name: Build and publish Python 🐍 distributions 📦
+    runs-on: ubuntu-18.04
+    steps:
+    - uses: actions/checkout@master
+
+    - name: Set up Python 3.8
+      uses: actions/setup-python@v1
+      with:
+        python-version: 3.8
+
+    - name: build release from tagged commit
+      run: >-
+        make build
+
+    - name: pypi-publish
+      uses: pypa/gh-action-pypi-publish@v1.3.1
+      with:
+        user: __token__
+        password: ${{ secrets.pypi_password }}
+
