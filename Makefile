@@ -86,9 +86,10 @@ else
 	# replace version string in all target dependencies
 	@# '$^' below means "the names of all the prerequisites"
 	$(SED_INPLACE) "s/.*/$(VERSION)/g" $^
-	git add $^ && git commit -m'Release v$(VERSION)'
+	git add $^ && git commit -m 'Release v$(VERSION)'
 	git tag -a v$(VERSION)
 	git push --all
+	git push --tags
 	@echo; \
 	echo "  $(UL)$(BOLD)$(BLUE)SUPER!$(RESET)"; \
 	echo; \

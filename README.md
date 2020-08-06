@@ -1,5 +1,7 @@
 # HotKey Helper  - standalone sxhkd configuration parser and keybind runner
 
+![.github/workflows/main.yml](https://github.com/fiskhest/rhkhm/workflows/.github/workflows/main.yml/badge.svg)
+
 rofi HotKey helper/menu -- Easily discover and execute sxhkd keybindings, inspired by [Hotkey-Helper](https://github.com/Triagle/hotkey-helper)
 
 ![rhkhm usage](showcase-rhkhm.gif)
@@ -34,7 +36,11 @@ You can also clone the repo and use the bundled install script:
 ```sh
 $ cd /tmp/
 $ git clone https://github.com/fiskhest/rhkhm/ && cd rhkhm/
-$ python setup.py install
+$ make install
+
+# or do what the makefile does manually:
+$ python3 -m pip install -f requirements.txt
+$ python3 setup.py install
 ```
 
 # sxhkdrc setup
@@ -183,6 +189,9 @@ super + b
     # if you installed manually by wgetting the files:
     # ${HOME}/.local/bin/rhkhmenu
 ```
+
+# release workflow
+run `make release VERSION=x.y.z`, trying to follow semver.
 
 # misc
 There are sure to be some bugs and use cases that wasn't foreseeable. PR's and issues are gladly appreciated!
