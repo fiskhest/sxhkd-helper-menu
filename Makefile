@@ -1,4 +1,6 @@
 SHELL := /bin/bash
+SCRIPT = rhkhm
+PKGVER = $(shell sed -n "s/^VERSION='\(.*\)'/\1/p" $(SCRIPT))
 
 # 'sed -i' is not part of the POSIX standard, so it's different for macOS/BSD
 ifeq ($(shell uname -s | grep -qiE '(darwin|bsd)'; echo $$?),0)
@@ -51,11 +53,11 @@ else
 		exit 1; \
 	fi
 	# replace version string in all target dependencies
-	@# '$^' below means "the names of all the prerequisites"
+	# '$^' below means "the names of all the prerequisites"
 	$(SED_INPLACE) "s/^\(VERSION=\)'\(.*\)'/\1'$(VERSION)'/" $^
 	git add $^ && git commit -m'Release v$(VERSION)'
 	git tag -a v$(VERSION)
-	git push --tags
+	git push --all
 	@echo; \
 	echo "  $(UL)$(BOLD)$(BLUE)SUPER!$(RESET)"; \
 	echo; \
@@ -68,8 +70,3 @@ else
 	echo "  to update the installed script."; \
 	echo
 endif
-
-#%_release:
-#	git tag -a $(bash tests/get_release.sh $@)
-#	git push --follow-tags
-	
