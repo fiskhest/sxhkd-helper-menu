@@ -55,7 +55,7 @@ build: installdeps
 publish: build
 	twine upload dist/*
 
-install:
+install: installdeps
 	python3 setup.py install
 
 # get VERSION from the environment/command line; use it to update the version
