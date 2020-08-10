@@ -9,15 +9,37 @@ from copy import copy
 HOME = os.getenv('HOME')
 config_file_location = os.getenv('sxhkd_config', f'{HOME}/.config/sxhkd/sxhkdrc')
 descriptor = os.getenv('descriptor', '# ')
+category_descriptor = os.getenv('category_descriptor', '### ')
 
 
 class sxhkd_helper:
     """ instance helper args and functions """
-    def __init__(self, loc, descr):
+    def __init__(self, loc, descr, category_descr):
         self.location = loc
         self.descr = descr
+        self.category_descr = category_descr
         self.raw_config = self._get_raw_config()
-        self.keybinds = [bind for bind in self._parse_keybinds()]
+        self.keybinds = self._get_keybinds()
+        self.categories = self._get_categories()
+
+    def _get_categories(self):
+        categories = list()
+        for parsed_keybind in self._parse_keybinds():
+            for category in parsed_keybind.keys():
+                categories.append(category)
+
+        categories = [*{*categories}]
+
+        return categories
+
+
+    def _get_keybinds(self):
+        keybinds = list()
+        for parsed_keybind in self._parse_keybinds():
+            for bind in parsed_keybind.values():
+                keybinds.append(bind)
+
+        return keybinds
 
 
     def _transform_block(self, block):
@@ -45,18 +67,32 @@ class sxhkd_helper:
     def _parse_keybinds(self):
         """ take the raw configuration from config and parses all eligible blocks, unchaining keychains and returning
         a list of unpacked commands """
-        block_regex = r"^" + self.descr + r"[\w\s\(\),\-\/&{}_\-,;:]+\n[\w\s+\d{}_\-,;:]+\n[\s+\t]+[\w\$()\~\-,{}/;]+.*"
+        block_regex = r"^" + self.descr + r"[\w\s\(\),\-\/&{}_\-,;:\%]+\n[\w\s+\d{}_\-,;:]+\n[\s+\t]+[\w\$()\~\-,{}/;]+.*"
         eligible_blocks = re.findall(block_regex, self._get_raw_config(), flags=re.M)
         unchained_lines = list()
         return_keybinds = list()
         for block in eligible_blocks:
             lines = self._transform_block(block)
+            category = self._get_keybind_category(lines[0])  # use the description to find the first preceeding header
             unchained_lines = self._unchain_lines(lines)
             to_be_returned = list(zip_longest(*unchained_lines, fillvalue=f'{unchained_lines[0][0]}'))
             for line in to_be_returned:
-                return_keybinds.append(line)
+                return_keybinds.append({f'{category}': line})
 
         return return_keybinds
+
+
+    def _get_keybind_category(self, key_desc):
+        """ take a description as formatted by _transform_block, search for and return the first preceeding header (string defined by -cd) """
+        query = "(?<=\\n)({}.*?)\\n(?=.*{})".format(re.escape(self.category_descr), re.escape(key_desc))
+        category_search = re.findall(query, self._get_raw_config(), flags=re.S)
+        if category_search:
+            # strip away any special chars in case the category is formatted weirdly for some reason
+            # we allow & and | since they aren't generally great characters for padding something in ascii art/column-filling...
+            result = re.sub('[^A-Za-z0-9\s&|]+', '', category_search[-1]).strip()
+            return result
+        else:
+            return 'misc'
 
 
     def _unchain_lines(self, lines):
@@ -132,14 +168,16 @@ class sxhkd_helper:
             delim_in_chain = [f"{key}"]
 
         else:
-            # TODO: yeah, so... a thing happened.
+            # TODO: yeah, so... a thing happened...
+            # Clean this PoS up and make this more intelligent than the current implementation...
             pos_in_chain = [r'{.*}\s(?!=\+)(?=\w)',
                             r'{.*}\s+(?=\+)',
                             r'.*{_}.*',
                             r'{\d+-\d+}',
                             r'(?<=\s){.*}(?=\s)',
                             r'{.*}$',
-                            r'{_,.*}',
+                            r'{(?<=_).*(?=\+)}',
+                            r'{_,.*(?=\+).*}',
                             r'^{.*}$',
                             r'{(?<=[\s\w]){\b(?!\+).*\b}(?=[\s\w])}',
                             r'{(?<=[\s\w]){.*(?=\+).*}(?=[\s\w])}',
@@ -149,6 +187,7 @@ class sxhkd_helper:
             delim_in_chain = [f"{key} + ",
                               f"{key} ",
                               f"{key} + ",
+                              f"{key}",
                               f"{key}",
                               f"{key}",
                               f"{key}",
@@ -176,6 +215,7 @@ class sxhkd_helper:
         # if no special rules was found to match, fallback to return the key sent into the script
         return key
     
+
 def print_keybinds(config, column_width):
     """ print all parsed and unpacked keybinds to console """
     for bind in config.keybinds:
@@ -185,9 +225,15 @@ def print_keybinds(config, column_width):
 
 def print_markdown(config):
     """ print all parsed and unpacked keybinds to console in a markdown format """
-    for bind in config.keybinds:
-        original_desc, keybind, original_cmd = bind
-        print(f'* `{keybind}`: {original_desc} - `{original_cmd}`')
+
+    for category in config.categories:
+        print(f'# {category}')
+        for bind in config._parse_keybinds():
+            if category in bind:
+                original_desc, keybind, original_cmd = bind[category]
+                print(f'* `{keybind}`: {original_desc} - `{original_cmd}`')
+
+        print()
 
 
 def execute_cmd(config, keystroke):
@@ -200,10 +246,12 @@ def execute_cmd(config, keystroke):
         if keystroke == keybind:
             subprocess.run([f'{cmd}'], shell=True)
 
+
 def main():
     parser = argparse.ArgumentParser(description='hotkey helper - standalone sxhkd configuration parser and keystroke runner')
     parser.add_argument('-f', '--file', default=f'{config_file_location}', help='path to configuration file')
     parser.add_argument('-d', '--descriptor', default=f'{descriptor}', help='comment descriptor')
+    parser.add_argument('-cd', '--category_descriptor', default=f'{category_descriptor}', help='category descriptor')
     parser.add_argument('-e', '--exec', default=False, help='execute command bound to passed shortcut')
     parser.add_argument('-p', '--print', default='true', action='store_true', help='Print fully unpacked keybind table')
     parser.add_argument('-t', '--tabexpand', default=50, help='set amount of cells to pad columns by')
@@ -212,7 +260,7 @@ def main():
     args = parser.parse_args()
     column_width = int(args.tabexpand)
 
-    config = sxhkd_helper(args.file, args.descriptor)
+    config = sxhkd_helper(args.file, args.descriptor, args.category_descriptor)
 
     # only execute if --exec was passed with an actual value
     if bool(args.exec) == True:
