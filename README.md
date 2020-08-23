@@ -12,7 +12,7 @@ rofi HotKey helper/menu -- Easily discover and execute sxhkd keybindings, inspir
 hkhelper is a python utility that parses `sxhkdhrc`-files for valid blocks of keybinds to create a documented list
 associating the description, the keybinding and the action to execute. It can be used in conjunction with rofi/dmenu to have a fuzzy searchable cheatsheet of your configured keybinds.
 
-This program was written using Python 3.8, but should work for most (if not all) Python 3 releases.
+This program was written using Python 3.8, but should work for 3.6 and greater.
 
 # Installation
 # AUR
@@ -192,6 +192,37 @@ super + b
     # ${HOME}/.local/bin/rhkhmenu
 ```
 
+# Print to markdown
+An option to parse and print the result as markdown for exporting to cheatsheet/blogs/dev/null is available using the `[--markdown,-m]` argument. To try and categorise, and abusing the fact that most configurations of sxhkd are categorised (and /or formated) with comments, this function parses all keybinds and looks for the immediate-most related ancestor, iterating over the categories and prints back any keybinds related to that category. One may control how the parsing of ancestors is performed by passing `[--category_descriptor,-cd]` (default: `### `)
+
+Example:
+```sh
+# original sxhkdrc
+### -- BSPWM | Preselect -- ###
+
+# Preselect {horizontal,vertical,cancel} split
+super + {period,minus,comma}
+    bspc node -p {east,south,cancel}
+
+### -- System Control | Audio & Brightness -- ###
+
+# {raise,lower} brightness
+XF86MonBrightness{Up,Down}
+    backlight{-up,-down}
+
+----------------------------------
+
+# unpacked example:
+# BSPWM | Preselect
+* `super + period`: Preselect horizontal split - `bspc node -p east`
+* `super + minus`: Preselect vertical split - `bspc node -p south`
+* `super + comma`: Preselect cancel split - `bspc node -p cancel`
+
+# System Control | Audio & Brightness
+* `XF86MonBrightnessUp`: raise brightness - `backlight-up`
+* `XF86MonBrightnessDown`: lower brightness - `backlight-down`
+```
+
 # release workflow
 run `make release VERSION=x.y.z`, trying to follow semver.
 
@@ -203,4 +234,3 @@ Alternative: [dmenu-hotkey](https://github.com/maledorak/dmenu-hotkeys)
 Todo:
 - fix the horrible regex matching...
 - cleaner readme/installation instructions
-- pipeline
