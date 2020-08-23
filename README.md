@@ -183,6 +183,14 @@ If you wish to use the bundled `rhkhmenu`, installation is as simple as:
 $ wget https://raw.githubusercontent.com/fiskhest/rhkhm/master/rhkhmenu -O ${HOME}/.local/bin/rhkhmenu
 ```
 
+```sh
+# skip this if you used any installation method or wish to use the defaults (rofi with some sorting and dmenu mode). Otherwise, configure the below according to your own wishes
+$ vi ~/.config/rhkhm.ini
+---
+opt_args=''
+menuhelper='fzf'
+```
+
 create a bind in your sxhkd-configuration:
 ```sh
 # Display keybind rofi menu

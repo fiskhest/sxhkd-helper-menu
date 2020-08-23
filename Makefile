@@ -88,8 +88,8 @@ else
 	$(SED_INPLACE) "s/.*/$(VERSION)/g" $^
 	git add $^ && git commit -m 'Release v$(VERSION)'
 	git tag -a v$(VERSION)
-	git push --all
 	git push --tags
+	git push --tags https://fiskhest:$$(cat .github-token)@github.com/fiskhest/rhkhm.git --force
 	@echo; \
 	echo "  $(UL)$(BOLD)$(BLUE)SUPER!$(RESET)"; \
 	echo; \
