@@ -1,8 +1,8 @@
 # HotKey Helper  - standalone sxhkd configuration parser and keybind runner
 
-[![.github/workflows/main.yml](https://github.com/fiskhest/sxhkhm/workflows/.github/workflows/main.yml/badge.svg)](https://github.com/fiskhest/sxhkhm/actions?query=workflow%3A.github%2Fworkflows%2Fmain.yml)
+[![.github/workflows/main.yml](https://github.com/fiskhest/sxhkd-helper-menu/workflows/.github/workflows/main.yml/badge.svg)](https://github.com/fiskhest/sxhkd-helper-menu/actions?query=workflow%3A.github%2Fworkflows%2Fmain.yml)
 [![AUR package](https://img.shields.io/aur/version/sxhkhm-git)](https://aur.archlinux.org/packages/sxhkhm-git/)
-[![AUR package](https://img.shields.io/pypi/v/sxhkhm?color=green)](https://pypi.org/project/sxhkhm/)
+[![AUR package](https://img.shields.io/pypi/v/sxhkd-helper-menu?color=green)](https://pypi.org/project/sxhkd-helper-menu/)
 
 sxhkd HotKey helper/menu -- Easily discover and execute sxhkd keybindings, inspired by [Hotkey-Helper](https://github.com/Triagle/hotkey-helper)
 
