@@ -2,7 +2,7 @@
 
 [![.github/workflows/main.yml](https://github.com/fiskhest/sxhkd-helper-menu/workflows/.github/workflows/main.yml/badge.svg)](https://github.com/fiskhest/sxhkd-helper-menu/actions?query=workflow%3A.github%2Fworkflows%2Fmain.yml)
 [![AUR package](https://img.shields.io/aur/version/sxhkhm-git)](https://aur.archlinux.org/packages/sxhkhm-git/)
-[![AUR package](https://img.shields.io/pypi/v/sxhkd-helper-menu?color=green)](https://pypi.org/project/sxhkd-helper-menu/)
+[![AUR package](https://img.shields.io/pypi/v/sxhkhm?color=green)](https://pypi.org/project/sxhkhm/)
 
 sxhkd HotKey helper/menu -- Easily discover and execute sxhkd keybindings, inspired by [Hotkey-Helper](https://github.com/Triagle/hotkey-helper)
 
@@ -30,14 +30,14 @@ To set this up inside your `$SHELL` (make sure that `${HOME}/.local/bin/` is loc
 
 ```sh
 $ mkdir -p ${HOME}/.local/bin/
-$ wget https://raw.githubusercontent.com/fiskhest/sxhkhm/master/sxhkhm/__init__.py -O ${HOME}/.local/bin/hkhelper.py
+$ wget https://raw.githubusercontent.com/fiskhest/sxhkd-helper-menu/master/sxhkhm/__init__.py -O ${HOME}/.local/bin/hkhelper.py
 ```
 
 You can also clone the repo and use the bundled install script:
 
 ```sh
 $ cd /tmp/
-$ git clone https://github.com/fiskhest/sxhkhm/ && cd sxhkhm/
+$ git clone https://github.com/fiskhest/sxhkd-helper-menu/ && cd sxhkd-helper-menu/
 $ make install
 
 # or do what the makefile does manually:
