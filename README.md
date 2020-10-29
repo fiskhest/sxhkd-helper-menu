@@ -1,12 +1,12 @@
 # HotKey Helper  - standalone sxhkd configuration parser and keybind runner
 
-[![.github/workflows/main.yml](https://github.com/fiskhest/rhkhm/workflows/.github/workflows/main.yml/badge.svg)](https://github.com/fiskhest/rhkhm/actions?query=workflow%3A.github%2Fworkflows%2Fmain.yml)
-[![AUR package](https://img.shields.io/aur/version/rhkhm-git)](https://aur.archlinux.org/packages/rhkhm-git/)
-[![AUR package](https://img.shields.io/pypi/v/rhkhm?color=green)](https://pypi.org/project/rhkhm/)
+[![.github/workflows/main.yml](https://github.com/fiskhest/sxhkhm/workflows/.github/workflows/main.yml/badge.svg)](https://github.com/fiskhest/sxhkhm/actions?query=workflow%3A.github%2Fworkflows%2Fmain.yml)
+[![AUR package](https://img.shields.io/aur/version/sxhkhm-git)](https://aur.archlinux.org/packages/sxhkhm-git/)
+[![AUR package](https://img.shields.io/pypi/v/sxhkhm?color=green)](https://pypi.org/project/sxhkhm/)
 
-rofi HotKey helper/menu -- Easily discover and execute sxhkd keybindings, inspired by [Hotkey-Helper](https://github.com/Triagle/hotkey-helper)
+sxhkd HotKey helper/menu -- Easily discover and execute sxhkd keybindings, inspired by [Hotkey-Helper](https://github.com/Triagle/hotkey-helper)
 
-![rhkhm usage](showcase-rhkhm.gif)
+![sxhkhm usage](showcase-sxhkhm.gif)
 
 # What this is
 hkhelper is a python utility that parses `sxhkdhrc`-files for valid blocks of keybinds to create a documented list
@@ -17,12 +17,12 @@ This program was written using Python 3.8, but should work for 3.6 and greater.
 # Installation
 # AUR
 ```sh
-sudo aura -A rhkhm-git
+sudo aura -A sxhkhm-git
 ```
 
 # PyPI
 ```sh
-pip install --user rhkhm
+pip install --user sxhkhm
 ```
 
 # manual install from git repo
@@ -30,14 +30,14 @@ To set this up inside your `$SHELL` (make sure that `${HOME}/.local/bin/` is loc
 
 ```sh
 $ mkdir -p ${HOME}/.local/bin/
-$ wget https://raw.githubusercontent.com/fiskhest/rhkhm/master/rhkhm/__init__.py -O ${HOME}/.local/bin/hkhelper.py
+$ wget https://raw.githubusercontent.com/fiskhest/sxhkhm/master/sxhkhm/__init__.py -O ${HOME}/.local/bin/hkhelper.py
 ```
 
 You can also clone the repo and use the bundled install script:
 
 ```sh
 $ cd /tmp/
-$ git clone https://github.com/fiskhest/rhkhm/ && cd rhkhm/
+$ git clone https://github.com/fiskhest/sxhkhm/ && cd sxhkhm/
 $ make install
 
 # or do what the makefile does manually:
@@ -90,11 +90,10 @@ Focus workspace 3                                 super + 3                     
 Focus workspace 4                                 super + 4                                         bspc desktop -f '^4'
 Focus workspace 5                                 super + 5                                         bspc desktop -f '^5'
 Focus workspace 6                                 super + 6                                         bspc desktop -f '^6'
-Focus workspace 9                                 super + 6                                         bspc desktop -f '^6'
+Focus workspace 9                                 super + 9                                         bspc desktop -f '^9'
 ```
 
-This allows for fast, compact documentation for keybindings of
-arbitrary complexity.
+This allows for fast, compact documentation for keybindings of arbitrary complexity.
 
 # Usage
 To use the program, run `hkhelper.py`. This will attempt to parse the configuration stored at the default location with the default descriptor, finally printing back to console (same as `--print`).
@@ -155,10 +154,7 @@ Move or swap node to the right (desktop/leaf)     super + shift + l             
 
 The output is tabulated so that the columns descriptions are neatly aligned and easy to interpret.
 
-This output can be piped to tools such as rofi or dmenu for further processing.
-
-Doing this with a program like rofi allows for powerful searching of
-hotkeys on the system.
+This output can be piped to tools such as fzf or rofi for further processing, enabling powerful and easy searching of hotkeys on the system.
 
 By running `python hkhelper.py --exec`, you can execute a command associated with a keybinding. For instance, from
 the above configuration `super + w` is bound to closing a window. Therefore, executing the following will close a window, as expected:
@@ -170,22 +166,22 @@ python hkhelper.py --exec "super + w"
 By combining the `--print` flag, and the `--exec` flag, you can create a relatively
 powerful system for discovery and remembering your keybindings by
 having `hkhelper.py --exec` run the output of the hotkeys searching script from
-earlier. A simple bash helper script `rhkhmenu` is bundled with this repo, essentially doing the following:
+earlier. A simple bash helper script `sxhkhmenu` is bundled with this repo, essentially doing the following:
 
 ```sh
 python hkhelper.py -e "$(python hkhelper.py -p | rofi -p Hotkeys -i -dmenu -width 75 | grep -Po '(?<=\s\s)(?=\S).*(?=\b\s\s)(?!$)')"
 ```
 
-If you wish to use the bundled `rhkhmenu`, installation is as simple as:
+If you wish to use the bundled `sxhkhmenu`, installation is as simple as:
 
 ```sh
 # skip this if you used any installation method
-$ wget https://raw.githubusercontent.com/fiskhest/rhkhm/master/rhkhmenu -O ${HOME}/.local/bin/rhkhmenu
+$ wget https://raw.githubusercontent.com/fiskhest/sxhkhm/master/sxhkhmenu -O ${HOME}/.local/bin/sxhkhmenu
 ```
 
 ```sh
 # skip this if you used any installation method or wish to use the defaults (rofi with some sorting and dmenu mode). Otherwise, configure the below according to your own wishes
-$ vi ~/.config/rhkhm.ini
+$ vi ~/.config/sxhkhm.ini
 ---
 opt_args=''
 menuhelper='fzf'
@@ -195,9 +191,9 @@ create a bind in your sxhkd-configuration:
 ```sh
 # Display keybind rofi menu
 super + b
-    rhkhmenu
+    sxhkhmenu
     # if you installed manually by wgetting the files:
-    # ${HOME}/.local/bin/rhkhmenu
+    # ${HOME}/.local/bin/sxhkhmenu
 ```
 
 # Print to markdown

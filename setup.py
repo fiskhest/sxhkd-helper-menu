@@ -4,15 +4,15 @@ with open("README.md", "r") as fh:
     long_description = fh.read()
 
 setuptools.setup(
-    name="rhkhm",
+    name="sxhkd-helper-menu",
     version_format='{tag}.dev{commitcount}+{gitsha}',
     setup_requires=['setuptools-git-version'],
     author="Johan Radivoj",
-    author_email="johan+rhkhm@radivoj.se",
+    author_email="johan+sxhkhm@radivoj.se",
     description="HotKey helper for sxhkd",
     long_description=long_description,
     long_description_content_type="text/markdown",
-    url="https://github.com/fiskhest/rhkhm",
+    url="https://github.com/fiskhest/sxhkd-helper-menu",
     packages=setuptools.find_packages(),
     classifiers=[
         "Programming Language :: Python :: 3",
@@ -21,9 +21,9 @@ setuptools.setup(
     ],
     entry_points={
         "console_scripts": [
-            'hkhelper.py = rhkhm:main'
+            'hkhelper.py = sxhkhm:main'
         ],
     },
-    scripts=['rhkhmenu'],
+    scripts=['sxhkhmenu'],
     python_requires='>=3.6',
 )

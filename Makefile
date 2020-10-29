@@ -1,5 +1,5 @@
 SHELL := /bin/bash
-SCRIPT = rhkhm
+SCRIPT = sxhkhmenu
 PKGVER = $(shell sed -n "s/^\(.*\)/\1/p" VERSION)
 
 # ANSI terminal colors (see 'man tput') and
@@ -89,7 +89,7 @@ else
 	git add $^ && git commit -m 'Release v$(VERSION)'
 	git tag -a v$(VERSION)
 	git push --tags
-	git push --tags https://fiskhest:$$(cat .github-token)@github.com/fiskhest/rhkhm.git --force
+	git push --tags https://fiskhest:$$(cat .github-token)@github.com/fiskhest/sxhkd-helper-menu.git --force
 	@echo; \
 	echo "  $(UL)$(BOLD)$(BLUE)SUPER!$(RESET)"; \
 	echo; \

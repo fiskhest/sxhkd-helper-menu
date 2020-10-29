@@ -36,5 +36,5 @@ super + e : {_,q,s,r,x,n,w,c,f}
 ## test: same as above but (maybe? double check) different use cases
 # show {tray,layout,keybind,clip,pass} menu
 super + {d,y,b,c,v}
-    {bsptray,bsp-layout-menu,$HOME/.local/bin/rhkhmenu,clipmenu,rofi-pass}
+    {bsptray,bsp-layout-menu,$HOME/.local/bin/sxhkhmenu,clipmenu,rofi-pass}
 

@@ -218,9 +218,13 @@ class sxhkd_helper:
 
 def print_keybinds(config, column_width):
     """ print all parsed and unpacked keybinds to console """
+    widths = [max(len(word) for word in col)
+              for col in zip_longest(*config.keybinds, fillvalue='')]
+
     for bind in config.keybinds:
-        original_desc, keybind, original_cmd = bind
-        print(f'{original_desc}\t{keybind}\t{original_cmd}'.expandtabs(column_width))
+        # left align but leave two spaces for max length word in col
+        # inspo: https://rosettacode.org/wiki/Align_columns#Python
+        print(' '.join(f"{wrd:<{wdth+1}}" for wdth, wrd in zip(widths, bind)))
 
 
 def print_markdown(config):
