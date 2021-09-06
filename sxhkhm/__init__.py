@@ -104,7 +104,7 @@ class sxhkd_helper:
         lines[2] = lines[2].rstrip()
 
         for index, line in enumerate(lines):
-            chain = re.search(r'(?<={).*(?=})', line)
+            chain = re.search(r'(?<={).*?(?=})', line)
             if chain:
                 any_chain = True
                 return_lines.append(self._unchain(chain.group(0), line, index))
@@ -142,7 +142,7 @@ class sxhkd_helper:
                 lines.append(self._delim_segment(range_index, line, index))
 
         elif re.search(r'\d+-\d+', keys):
-            copy_keys = copy_keys.split('-')
+            copy_keys = re.match(r'\d+-\d+', keys)[0].split('-')
             start_of_range = int(copy_keys[0])
             end_of_range = int(re.sub(r',.*', '', copy_keys[-1]))
             for range_index in range(start_of_range, end_of_range + 1):
@@ -175,7 +175,9 @@ class sxhkd_helper:
                             r'.*{_}.*',
                             r'{\d+-\d+}',
                             r'(?<=\s){.*}(?=\s)',
-                            r'{.*}$',
+                            r'{.*\+\s}',
+                            r'{.*?}(?!={.*})',
+                            r'{.*?}$',
                             r'{(?<=_).*(?=\+)}',
                             r'{_,.*(?=\+).*}',
                             r'^{.*}$',
@@ -188,6 +190,8 @@ class sxhkd_helper:
                               f"{key} ",
                               f"{key} + ",
                               f"{key}",
+                              f"{key}",
+                              f"{key} + ",
                               f"{key}",
                               f"{key}",
                               f"{key}",
@@ -210,7 +214,7 @@ class sxhkd_helper:
                 # just return nothing if we struck a wildcard
                 if key == '_':
                     return re.sub(f'{pos}', '', line)
-                return re.sub(rf'{pos}', rf'{delim}', line)
+                return re.sub(rf'{pos}', rf'{delim}', line, count=1)
 
         # if no special rules was found to match, fallback to return the key sent into the script
         return key
