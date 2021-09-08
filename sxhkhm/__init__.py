@@ -131,8 +131,6 @@ class sxhkd_helper:
         """ takes a list of keys or commands, the original line and the line index (in the block), returning a new list of unpacked keybinds """
         lines = list()
 
-        keys = re.sub(r'\s\+\s', '', keys)
-
         copy_keys = copy(keys)
         if re.search(r'^[a-zA-Z]-[a-zA-Z][,$]', keys):
             copy_keys = re.sub(r'(?<=\w)[\,\w]+', '', copy_keys)
@@ -159,8 +157,6 @@ class sxhkd_helper:
 
     def _delim_segment(self, key, line, index):
         """ places a delimiter (+, or '') at the previous keychain segment position (start of line, in the middle, end of line OR nothing if the line only contains keychains) """
-        if '+' in key:
-            key = re.sub(r'\+', '', key)
 
         # for the first line (the comment), we don't want to put any delimiters in, no matter where in the line the chain is.
         if index == 0:
@@ -191,7 +187,7 @@ class sxhkd_helper:
                               f"{key} + ",
                               f"{key}",
                               f"{key}",
-                              f"{key} + ",
+                              f"{key}",
                               f"{key}",
                               f"{key}",
                               f"{key}",
@@ -211,6 +207,7 @@ class sxhkd_helper:
                 #   and anywhere two or more spaces is seen, replace by one single space
                 delim = delim.lstrip()
                 delim = re.sub(r'\s\s+', ' ', delim)
+                delim = re.sub(r'\s\+\s\+\s', ' + ', delim)
                 # just return nothing if we struck a wildcard
                 if key == '_':
                     return re.sub(f'{pos}', '', line)
