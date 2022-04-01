@@ -14,6 +14,7 @@ category_descriptor = os.getenv('category_descriptor', '### ')
 
 class sxhkd_helper:
     """ instance helper args and functions """
+    count_uh = 0
     def __init__(self, loc, descr, category_descr):
         self.location = loc
         self.descr = descr
@@ -59,7 +60,7 @@ class sxhkd_helper:
         """ load configuration from the location defined upon instantiation of class """
         with open(self.location, "r") as cfg:
             data = cfg.read()
-        
+
         self._raw_config = data
         return data
 
@@ -95,7 +96,7 @@ class sxhkd_helper:
             return 'misc'
 
 
-    def _unchain_lines(self, lines):
+    def _unchain_lines(self, lines, count_uh=count_uh):
         """ take a transformed block of lines (from ._transform_block), unpacking any keychains, finally
         returning a list containing any unpacked or original lines of keybinds """
         any_chain = False
@@ -103,60 +104,76 @@ class sxhkd_helper:
         lines[0] = lines[0].strip(self.descr)
         lines[2] = lines[2].rstrip()
 
+        count_uh += 1
         r1_lines = list()
         for line in lines:
-            cr = re.findall(r'(?<={).*?(?=})', line)
-            for chain in cr:
-                if re.search(r'\d-\d', chain):
-                    r2_lines = list()
-                    all_digits = re.findall(r'\d', chain)
-                    for ichain in all_digits:
-                        r2_lines.append(int(ichain))
-                    r2_lines.sort()
-                    r3_lines = list()
-                    try:
-                        for index in range(r2_lines[0], r2_lines[-1] + 1):
-                            r3_lines.append(index)
-                        r1_lines.append(r3_lines)
-                    except:
-                        breakpoint()
-                elif ',' in chain:
-                    r1_lines.append([i.strip() for i in chain.split(',')])
+            if not re.search(r'{.*?}', line):
+                r1_lines.append([])
+            else:
+                cr = re.findall(r'(?<={).*?(?=})', line)
+                for chain in cr:
+                    if re.search(r'\d-\d', chain):
+                        r2_lines = list()
+                        all_digits = re.findall(r'\d', chain)
+                        for ichain in all_digits:
+                            r2_lines.append(int(ichain))
+                        r2_lines.sort()
+                        r3_lines = list()
+                        try:
+                            for index in range(r2_lines[0], r2_lines[-1] + 1):
+                                r3_lines.append(index)
+                            r1_lines.append(r3_lines)
+                        except:
+                            breakpoint()
+                    elif ',' in chain:
+                        r1_lines.append([i.strip() for i in chain.split(',')])
 
-        to_out = list()
-        print(lines)
-
+        out_list = list()
+        count_hits = 0
         for outer_index, line in enumerate(lines):
             print(outer_index, line)
             ri = re.findall(r'{.*?}', line)
-            for inner_index, inline in enumerate(ri):
-                if outer_index == 0:
-                    outer_index_multiplier = 0 + inner_index
-                else:
-                    outer_index_multiplier = outer_index * 2 - inner_index
-                if '+' in inline:
-                    inline = re.sub('\+', '\\+', inline)
-                key = r1_lines[outer_index_multiplier][inner_index]
-                if key == '_':
-                    key = ''
-                line = re.sub(inline, str(key), line)
+            to_out = list()
+            longest = len(max(r1_lines, key=len))
 
-            longest = len(max(r1_lines[0:len(ri)], key=len))
+            if ri:
+                # print(f'{outer_index} contained chain')
+                for inner_index, inline in enumerate(ri):
+                    if outer_index == 0:
+                        outer_index_multiplier = 0 + inner_index
+                    else:
+                        outer_index_multiplier = outer_index * len(ri)
+                    if '+' in inline:
+                        inline = re.sub('\+', '\\+', inline)
 
-            to_out.append([line])
+                    try:
+                        key = r1_lines[outer_index_multiplier][inner_index]
+                    except IndexError as err:
+                        print(err)
+                        breakpoint()
 
-        out_list = list()
-        for final_out in to_out:
-            for k in range(1, longest):
-                do_return = re.sub(r'\d', str(k), final_out[0])
-                out_list.append(do_return)
+                    if key == '_':
+                        key = ''
+                    line = re.sub(inline, str(key), line)
+
+                to_out.append([line])
+
+                for final_out in to_out:
+                    for k in range(1, longest+1):
+                        do_return = re.sub(r'\d', str(k), final_out[0])
+                        out_list.append([do_return])
+
+            else:
+
+                print(f'{outer_index} did not contain chain')
+                for _ in range(1, longest):
+                    out_list.append([line])
 
         return_lines = out_list
 
         if any_chain and len(return_lines) == 1:
             exit("A keychain denoting multiple segments was specified for the keybind, but no matching cmdchain exists. Fix your sxhkdrc")
 
-        breakpoint()
         # ensure all sublists in return_lines have the same length by filling the sublist with a copy of the first item 
         #maxlen = 0
         #for index, line in enumerate(return_lines):
@@ -167,6 +184,7 @@ class sxhkd_helper:
         #        for _ in range(0, maxlen-1):
         #            return_lines[index].append(return_lines[index][0]) 
 
+        breakpoint()
         return return_lines
 
 
