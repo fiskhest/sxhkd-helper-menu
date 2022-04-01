@@ -38,3 +38,7 @@ super + e : {_,q,s,r,x,n,w,c,f}
 super + {d,y,b,c,v}
     {bsptray,bsp-layout-menu,$HOME/.local/bin/sxhkhmenu,clipmenu,rofi-pass}
 
+## test: compounding expansions
+# {focus, send to} desktop
+super + {_,shift + }{1-9,0}
+  bspc {desktop -f, node -d} ^{1-9,10}

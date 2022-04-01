@@ -3,7 +3,7 @@ import os
 import re
 import argparse
 import sys
-from itertools import zip_longest
+from itertools import zip_longest, product
 from copy import copy
 
 HOME = os.getenv('HOME')
@@ -103,27 +103,102 @@ class sxhkd_helper:
         lines[0] = lines[0].strip(self.descr)
         lines[2] = lines[2].rstrip()
 
-        for index, line in enumerate(lines):
-            chain = re.search(r'(?<={).*?(?=})', line)
-            if chain:
-                any_chain = True
-                return_lines.append(self._unchain(chain.group(0), line, index))
-            else:
-                return_lines.append([line])
+        r1_lines = list()
+        for line in lines:
+            cr = re.findall(r'(?<={).*?(?=})', line)
+            for chain in cr:
+                if re.search(r'\d-\d', chain):
+                    r2_lines = list()
+                    all_digits = re.findall(r'\d', chain)
+                    for ichain in all_digits:
+                        r2_lines.append(int(ichain))
+                    r2_lines.sort()
+                    r3_lines = list()
+                    try:
+                        for index in range(r2_lines[0], r2_lines[-1] + 1):
+                            r3_lines.append(index)
+                        r1_lines.append(r3_lines)
+                    except:
+                        breakpoint()
+                elif ',' in chain:
+                    r1_lines.append([i.strip() for i in chain.split(',')])
+
+        to_out = list()
+        print(lines)
+
+        for outer_index, line in enumerate(lines):
+            print(outer_index, line)
+            ri = re.findall(r'{.*?}', line)
+            for inner_index, inline in enumerate(ri):
+                if outer_index == 0:
+                    outer_index_multiplier = 0 + inner_index
+                else:
+                    outer_index_multiplier = outer_index * 2 - inner_index
+                if '+' in inline:
+                    inline = re.sub('\+', '\\+', inline)
+                key = r1_lines[outer_index_multiplier][inner_index]
+                if key == '_':
+                    key = ''
+                line = re.sub(inline, str(key), line)
+
+            longest = len(max(r1_lines[0:len(ri)], key=len))
+
+            to_out.append([line])
+
+        out_list = list()
+        for final_out in to_out:
+            for k in range(1, longest):
+                do_return = re.sub(r'\d', str(k), final_out[0])
+                out_list.append(do_return)
+
+        return_lines = out_list
 
         if any_chain and len(return_lines) == 1:
             exit("A keychain denoting multiple segments was specified for the keybind, but no matching cmdchain exists. Fix your sxhkdrc")
 
+        breakpoint()
         # ensure all sublists in return_lines have the same length by filling the sublist with a copy of the first item 
-        maxlen = 0
-        for index, line in enumerate(return_lines):
-            if len(line) >= maxlen:
-                maxlen = len(line)
+        #maxlen = 0
+        #for index, line in enumerate(return_lines):
+        #    if len(line) >= maxlen:
+        #        maxlen = len(line)
 
-            else:
-                for _ in range(0, maxlen-1):
-                    return_lines[index].append(return_lines[index][0]) 
+        #    else:
+        #        for _ in range(0, maxlen-1):
+        #            return_lines[index].append(return_lines[index][0]) 
 
+        return return_lines
+
+
+    def _unchain_multiple(self, chains, line, index):
+        return_keys = list()
+        line_no_chains = line
+        return_lines = list()
+        for chain in chains:
+            return_keys.append(self._unchain(chain, line, index))
+            #return_keys.append(self._unchain(chain, line, index))
+            # for sub_chain in chain_expansions:
+            #     #print(chain_index, sub_chain)
+            #     regex_to_parse = f"({chain})"
+            #     r = re.compile("\{" + regex_to_parse + "\}")
+            #     print(re.sub(r, sub_chain, line_no_chains))
+        #print(chains)
+        # expanding multiple chains in a line, need to zip both expansions
+        #for expansions in return_keys:
+        #    regex_to_parse = f"{expansions}"
+        #    r = re.compile("\{" + regex_to_parse + "\}")
+        #    for expansion in expansions:
+        #        line_no_chains = re.sub(r, expansion, line_no_chains)
+        #        print(line_no_chains)
+        #        breakpoint()
+        #        #return_lines.append(expansion + line_no_chains)
+        cp = list(product(*return_keys))
+
+        for p1, p2 in cp:
+            r = re.sub(r'{.*?}', p1, line, count=1)
+            r = re.sub(r'{.*?}', p2, r, count=1)
+            return_lines.append(r)
+        #breakpoint()
         return return_lines
 
 
@@ -147,10 +222,17 @@ class sxhkd_helper:
                 lines.append(self._delim_segment(str(range_index), line, index))
 
         if ',' in keys:
+            #if keys == '_,shift + ':
+            #    breakpoint()
             comma_keys = copy(keys)
             comma_keys = re.sub(r'^[\w\d]+-[\w\d]+,', '', comma_keys)
             for key in comma_keys.split(','):
                 lines.append(self._delim_segment(key, line, index))
+
+        #rc = re.compile('.*[{}].*')
+        #for line in lines:
+        #    if rc.match(line):
+        #        print("match")
 
         return lines
 
@@ -180,7 +262,9 @@ class sxhkd_helper:
                             r'{(?<=[\s\w]){\b(?!\+).*\b}(?=[\s\w])}',
                             r'{(?<=[\s\w]){.*(?=\+).*}(?=[\s\w])}',
                             r'{\b_}',
-                            r'(?<=\S){.*}(?=\S)']
+                            r'(?<=\S){.*}(?=\S)',
+                            r'((?<=})\{.*{key}.*\})',
+                            r'(?<=}){.*?}|{.*?}(?={))']
 
             delim_in_chain = [f"{key} + ",
                               f"{key} ",
@@ -196,11 +280,17 @@ class sxhkd_helper:
                               f"{key}",
                               f"{key} + ",
                               f"",
+                              f"{key}",
+                              f"{key}",
                               f"{key}"]
 
         positions = zip(pos_in_chain, delim_in_chain)
         # search keychain for possible delimiter position and transform the line to make sense
         for pos, delim in positions: 
+            # just return nothing if we struck a wildcard
+            if key == '_':
+                return re.sub(f'{pos}', '', line)
+
             match = re.search(pos, line, re.M)
             if match:
                 # bugfix chains containing one or more spaces: {key1, key2}, strip the leading space(s),
@@ -208,10 +298,10 @@ class sxhkd_helper:
                 delim = delim.lstrip()
                 delim = re.sub(r'\s\s+', ' ', delim)
                 delim = re.sub(r'\s\+\s\+\s', ' + ', delim)
-                # just return nothing if we struck a wildcard
-                if key == '_':
-                    return re.sub(f'{pos}', '', line)
                 return re.sub(rf'{pos}', rf'{delim}', line, count=1)
+            else:
+                print(f"{key}: no match")
+                print(f"{pos}: {line}")
 
         # if no special rules was found to match, fallback to return the key sent into the script
         return key
