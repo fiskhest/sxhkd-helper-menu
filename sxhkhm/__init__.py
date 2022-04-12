@@ -3,7 +3,7 @@ import os
 import re
 import argparse
 import sys
-from itertools import zip_longest, product
+from itertools import zip_longest
 from copy import copy
 
 HOME = os.getenv('HOME')
@@ -96,6 +96,90 @@ class sxhkd_helper:
             return 'misc'
 
 
+    def _unexpand_chain(self, chain, line):
+        """ take an unformatted line and the left-most found chain, iterate upon any chain and return a list
+            containing ranges of alphanumerics, comma-separated values found inside chain """
+        out = list()
+        # no chains found to expand
+        if not re.search(r'{.*?}', chain):
+            out.append(chain)
+        else:
+            srch = re.search(r'(?<={).*?(?=})', chain)
+            if srch:
+                if ',' in srch.group(0):
+                    split_lines = [i.lstrip() for i in srch.group(0).split(',') if not re.search(r'(\d+-\d+|\d+|(?<!\w)[a-z]-[a-z](?!\w))', i)]  # i.strip()
+                    if split_lines:
+                        for sl in split_lines:
+                            if sl == '_':
+                                out.append('')
+                            else:
+                                out.append(sl)
+
+                if re.search(r'\d+', chain):
+                    srch_lines = list()
+                    single_digits = [int(i) for i in re.findall(r'\d+', chain)]
+                    for ichain in single_digits:
+                        srch_lines.append(int(ichain))
+
+                srch_range_d = re.search(r'\d+-\d+', chain)
+                srch_range_a = re.search(r'(?<!\w)[a-z]-[a-z](?!\w)', chain)
+
+                if srch_range_d:
+                    range_digits = list()
+                    range_steps = [int(i) for i in srch_range_d.group(0).split('-')]
+                    for index in range(range_steps[0], range_steps[1] + 1):
+                        range_digits.append(index)
+                    missing_digits = set(single_digits) - set(range_digits)
+                    to_consider = range_digits + list(missing_digits)
+                    for cl in to_consider:
+                        out.append(cl)
+
+                elif srch_range_a:
+                    chain_copy = copy(chain)
+                    chain_copy = re.sub(r'(?<=\w)[\,\w]+', '', chain_copy)
+                    chain_copy = re.sub(r'[{}]', '', chain_copy)
+                    chain_copy = chain_copy.split('-')
+                    character_range = map(chr, range(ord(chain_copy[0]), ord(chain_copy[-1])+1))
+                    for range_index in character_range:
+                        out.append(range_index)
+                    out.sort()
+
+        return out
+
+
+    def _unexpand_chain_lines(self, chains, line):
+        """ takes a list of chains found in the line and the complete line, iterates over chains and unexpands each one
+            adding a copy of the tranformed line for each iteration that is finally returned as a complete list
+        """
+        out = list()
+        inner = list()
+        possible_expansions = list()
+
+        out_line = ''
+        for chain in chains:
+            possible_expansions.append(self._unexpand_chain(chain,line))
+
+        for outer_exp in min(possible_expansions, key=len):
+            out_line  = re.sub(r'{.*?}', str(outer_exp), line, count=1)
+
+            if len(possible_expansions) > 1:
+                # the use of variable chain here looks like a hack since it will always be the last found chain iterated upon previously
+                # this implies that this will work for a maximum of two chains, where the second chain is always the longest of the two
+                # the reason this currently works is because of the first substitution matches and replaces the first occurence of {.*?} with a subset of the smallest expanded list of a list of chains
+                # and the second substitution matching and replacing {chain} with a subset of the biggest expanded list of a list of chains.
+                for pos_exp in max(possible_expansions, key=len):
+                    in_line = out_line
+                    in_line = re.sub(rf'{chain}', str(pos_exp), in_line)
+                    inner.append(in_line)
+            else:
+                inner.append(out_line)
+
+        for line in inner:
+            out.append(line)
+
+        return out
+
+
     def _unchain_lines(self, lines, count_uh=count_uh):
         """ take a transformed block of lines (from ._transform_block), unpacking any keychains, finally
         returning a list containing any unpacked or original lines of keybinds """
@@ -105,225 +189,35 @@ class sxhkd_helper:
         lines[2] = lines[2].rstrip()
 
         count_uh += 1
-        r1_lines = list()
-        for line in lines:
-            if not re.search(r'{.*?}', line):
-                r1_lines.append([])
-            else:
-                cr = re.findall(r'(?<={).*?(?=})', line)
-                for chain in cr:
-                    if re.search(r'\d-\d', chain):
-                        r2_lines = list()
-                        all_digits = re.findall(r'\d', chain)
-                        for ichain in all_digits:
-                            r2_lines.append(int(ichain))
-                        r2_lines.sort()
-                        r3_lines = list()
-                        try:
-                            for index in range(r2_lines[0], r2_lines[-1] + 1):
-                                r3_lines.append(index)
-                            r1_lines.append(r3_lines)
-                        except:
-                            breakpoint()
-                    elif ',' in chain:
-                        r1_lines.append([i.strip() for i in chain.split(',')])
 
-        out_list = list()
-        count_hits = 0
+        to_out = list()
         for outer_index, line in enumerate(lines):
-            print(outer_index, line)
             ri = re.findall(r'{.*?}', line)
-            to_out = list()
-            longest = len(max(r1_lines, key=len))
-
+            lines_to_out = list()
+            lines_to_out.append(ri)
             if ri:
-                # print(f'{outer_index} contained chain')
-                for inner_index, inline in enumerate(ri):
-                    if outer_index == 0:
-                        outer_index_multiplier = 0 + inner_index
-                    else:
-                        outer_index_multiplier = outer_index * len(ri)
-                    if '+' in inline:
-                        inline = re.sub('\+', '\\+', inline)
-
-                    try:
-                        key = r1_lines[outer_index_multiplier][inner_index]
-                    except IndexError as err:
-                        print(err)
-                        breakpoint()
-
-                    if key == '_':
-                        key = ''
-                    line = re.sub(inline, str(key), line)
-
+                to_out.append(self._unexpand_chain_lines(ri, line))
+            else:
                 to_out.append([line])
 
-                for final_out in to_out:
-                    for k in range(1, longest+1):
-                        do_return = re.sub(r'\d', str(k), final_out[0])
-                        out_list.append([do_return])
 
-            else:
-
-                print(f'{outer_index} did not contain chain')
-                for _ in range(1, longest):
-                    out_list.append([line])
-
-        return_lines = out_list
+        return_lines = to_out
 
         if any_chain and len(return_lines) == 1:
             exit("A keychain denoting multiple segments was specified for the keybind, but no matching cmdchain exists. Fix your sxhkdrc")
 
         # ensure all sublists in return_lines have the same length by filling the sublist with a copy of the first item 
-        #maxlen = 0
-        #for index, line in enumerate(return_lines):
-        #    if len(line) >= maxlen:
-        #        maxlen = len(line)
+        maxlen = 0
+        for index, line in enumerate(return_lines):
+            if len(line) >= maxlen:
+                maxlen = len(line)
 
-        #    else:
-        #        for _ in range(0, maxlen-1):
-        #            return_lines[index].append(return_lines[index][0]) 
-
-        breakpoint()
-        return return_lines
-
-
-    def _unchain_multiple(self, chains, line, index):
-        return_keys = list()
-        line_no_chains = line
-        return_lines = list()
-        for chain in chains:
-            return_keys.append(self._unchain(chain, line, index))
-            #return_keys.append(self._unchain(chain, line, index))
-            # for sub_chain in chain_expansions:
-            #     #print(chain_index, sub_chain)
-            #     regex_to_parse = f"({chain})"
-            #     r = re.compile("\{" + regex_to_parse + "\}")
-            #     print(re.sub(r, sub_chain, line_no_chains))
-        #print(chains)
-        # expanding multiple chains in a line, need to zip both expansions
-        #for expansions in return_keys:
-        #    regex_to_parse = f"{expansions}"
-        #    r = re.compile("\{" + regex_to_parse + "\}")
-        #    for expansion in expansions:
-        #        line_no_chains = re.sub(r, expansion, line_no_chains)
-        #        print(line_no_chains)
-        #        breakpoint()
-        #        #return_lines.append(expansion + line_no_chains)
-        cp = list(product(*return_keys))
-
-        for p1, p2 in cp:
-            r = re.sub(r'{.*?}', p1, line, count=1)
-            r = re.sub(r'{.*?}', p2, r, count=1)
-            return_lines.append(r)
-        #breakpoint()
-        return return_lines
-
-
-    def _unchain(self, keys, line, index):
-        """ takes a list of keys or commands, the original line and the line index (in the block), returning a new list of unpacked keybinds """
-        lines = list()
-
-        copy_keys = copy(keys)
-        if re.search(r'^[a-zA-Z]-[a-zA-Z][,$]', keys):
-            copy_keys = re.sub(r'(?<=\w)[\,\w]+', '', copy_keys)
-            copy_keys = copy_keys.split('-')
-            character_range = map(chr, range(ord(copy_keys[0]), ord(copy_keys[-1])+1))
-            for range_index in character_range:
-                lines.append(self._delim_segment(range_index, line, index))
-
-        elif re.search(r'\d+-\d+', keys):
-            copy_keys = re.match(r'\d+-\d+', keys)[0].split('-')
-            start_of_range = int(copy_keys[0])
-            end_of_range = int(re.sub(r',.*', '', copy_keys[-1]))
-            for range_index in range(start_of_range, end_of_range + 1):
-                lines.append(self._delim_segment(str(range_index), line, index))
-
-        if ',' in keys:
-            #if keys == '_,shift + ':
-            #    breakpoint()
-            comma_keys = copy(keys)
-            comma_keys = re.sub(r'^[\w\d]+-[\w\d]+,', '', comma_keys)
-            for key in comma_keys.split(','):
-                lines.append(self._delim_segment(key, line, index))
-
-        #rc = re.compile('.*[{}].*')
-        #for line in lines:
-        #    if rc.match(line):
-        #        print("match")
-
-        return lines
-
-
-    def _delim_segment(self, key, line, index):
-        """ places a delimiter (+, or '') at the previous keychain segment position (start of line, in the middle, end of line OR nothing if the line only contains keychains) """
-
-        # for the first line (the comment), we don't want to put any delimiters in, no matter where in the line the chain is.
-        if index == 0:
-            pos_in_chain = [r'{.*}']
-            delim_in_chain = [f"{key}"]
-
-        else:
-            # TODO: yeah, so... a thing happened...
-            # Clean this PoS up and make this more intelligent than the current implementation...
-            pos_in_chain = [r'{.*}\s(?!=\+)(?=\w)',
-                            r'{.*}\s+(?=\+)',
-                            r'.*{_}.*',
-                            r'{\d+-\d+}',
-                            r'(?<=\s){.*}(?=\s)',
-                            r'{.*\+\s}',
-                            r'{.*?}(?!={.*})',
-                            r'{.*?}$',
-                            r'{(?<=_).*(?=\+)}',
-                            r'{_,.*(?=\+).*}',
-                            r'^{.*}$',
-                            r'{(?<=[\s\w]){\b(?!\+).*\b}(?=[\s\w])}',
-                            r'{(?<=[\s\w]){.*(?=\+).*}(?=[\s\w])}',
-                            r'{\b_}',
-                            r'(?<=\S){.*}(?=\S)',
-                            r'((?<=})\{.*{key}.*\})',
-                            r'(?<=}){.*?}|{.*?}(?={))']
-
-            delim_in_chain = [f"{key} + ",
-                              f"{key} ",
-                              f"{key} + ",
-                              f"{key}",
-                              f"{key}",
-                              f"{key}",
-                              f"{key}",
-                              f"{key}",
-                              f"{key}",
-                              f"{key} + ",
-                              f"{key}",
-                              f"{key}",
-                              f"{key} + ",
-                              f"",
-                              f"{key}",
-                              f"{key}",
-                              f"{key}"]
-
-        positions = zip(pos_in_chain, delim_in_chain)
-        # search keychain for possible delimiter position and transform the line to make sense
-        for pos, delim in positions: 
-            # just return nothing if we struck a wildcard
-            if key == '_':
-                return re.sub(f'{pos}', '', line)
-
-            match = re.search(pos, line, re.M)
-            if match:
-                # bugfix chains containing one or more spaces: {key1, key2}, strip the leading space(s),
-                #   and anywhere two or more spaces is seen, replace by one single space
-                delim = delim.lstrip()
-                delim = re.sub(r'\s\s+', ' ', delim)
-                delim = re.sub(r'\s\+\s\+\s', ' + ', delim)
-                return re.sub(rf'{pos}', rf'{delim}', line, count=1)
             else:
-                print(f"{key}: no match")
-                print(f"{pos}: {line}")
+                for _ in range(0, maxlen-1):
+                    return_lines[index].append(return_lines[index][0]) 
 
-        # if no special rules was found to match, fallback to return the key sent into the script
-        return key
-    
+        return return_lines
+
 
 def print_keybinds(config, column_width):
     """ print all parsed and unpacked keybinds to console """
