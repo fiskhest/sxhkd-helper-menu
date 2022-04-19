@@ -211,9 +211,9 @@ def print_keybinds(config, column_width):
               for col in zip_longest(*config.keybinds, fillvalue='')]
 
     for bind in config.keybinds:
-        # left align but leave two spaces for max length word in col
+        # left align but leave three spaces for max length word in col
         # inspo: https://rosettacode.org/wiki/Align_columns#Python
-        print(' '.join(f"{wrd:<{wdth+1}}" for wdth, wrd in zip(widths, bind)))
+        print(' '.join(f"{wrd:<{wdth+2}}" for wdth, wrd in zip(widths, bind)))
 
 
 def print_markdown(config):
