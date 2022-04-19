@@ -9,7 +9,10 @@ with open(os.path.join('.', 'VERSION')) as version_file:
 
 setuptools.setup(
     name="sxhkhm",
-    version_format='{tag}.dev{commitcount}+{gitsha}',
+    setuptools_git_versioning={
+        "enabled": True,
+        "template": "{tag}.dev{ccount}+{gitsha}",
+    },
     setup_requires=['setuptools-git-versioning'],
     author="Johan Radivoj",
     author_email="johan+sxhkhm@radivoj.se",
