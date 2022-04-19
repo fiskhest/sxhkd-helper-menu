@@ -11,7 +11,7 @@ setuptools.setup(
     name="sxhkhm",
     setuptools_git_versioning={
         "enabled": True,
-        "template": "{tag}.dev{ccount}+{gitsha}",
+        # "template": "{tag}.dev{ccount}+{gitsha}",
     },
     setup_requires=['setuptools-git-versioning'],
     author="Johan Radivoj",
