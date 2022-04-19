@@ -100,21 +100,13 @@ class sxhkd_helper:
         """ take an unformatted line and the left-most found chain, iterate upon any chain and return a list
             containing ranges of alphanumerics, comma-separated values found inside chain """
         out = list()
+
         # no chains found to expand
         if not re.search(r'{.*?}', chain):
             out.append(chain)
         else:
             srch = re.search(r'(?<={).*?(?=})', chain)
             if srch:
-                if ',' in srch.group(0):
-                    split_lines = [i.lstrip() for i in srch.group(0).split(',') if not re.search(r'(\d+-\d+|\d+|(?<!\w)[a-z]-[a-z](?!\w))', i)]
-                    if split_lines:
-                        for sl in split_lines:
-                            if sl == '_':
-                                out.append('')
-                            else:
-                                out.append(sl)
-
                 if re.search(r'\d+', chain):
                     srch_lines = list()
                     single_digits = [int(i) for i in re.findall(r'\d+', chain)]
@@ -143,6 +135,18 @@ class sxhkd_helper:
                     for range_index in character_range:
                         out.append(range_index)
                     out.sort()
+                else:
+                    if ',' in srch.group(0):
+                        split_lines = [i.lstrip() for i in srch.group(0).split(',') if not re.search(r'(\d+-\d+|(?<!\w)[a-z]-[a-z](?!\w))', i)]
+                        if split_lines:
+                            for sl in split_lines:
+                                if sl == '_':
+                                    out.append('')
+                                else:
+                                    out.append(sl)
+                    else:
+                        out = [i.lstrip() for i in srch.group(0).split(',')]
+                        return out
 
         return out
 
@@ -163,9 +167,9 @@ class sxhkd_helper:
             exp_line = line
             for i, le in enumerate(exp):
                 exp_line = re.sub(r'{.*?}', str(le), exp_line, count=1)
+                exp_line = re.sub(r'\s{2,}', ' ', exp_line)
                 if (i==len(exp)-1):
-                    out.append(exp_line)
-
+                    out.append(exp_line.lstrip())
         return out
 
 

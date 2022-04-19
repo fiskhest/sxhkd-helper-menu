@@ -18,7 +18,7 @@ super + shift + v
 
 ## test: contains multiple spaces
 # Launch {termite,dropdown terminal}
-super + {_,  shift + }Return
+super + {_,  shift + } Return
     bspterm {_,-f}
 
 ##---------- Rofi Launcher & Menus ----------##
