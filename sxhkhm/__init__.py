@@ -3,7 +3,7 @@ import os
 import re
 import argparse
 import sys
-from itertools import zip_longest
+from itertools import zip_longest, product
 from copy import copy
 
 HOME = os.getenv('HOME')
@@ -96,7 +96,7 @@ class sxhkd_helper:
             return 'misc'
 
 
-    def _unexpand_chain(self, chain, line):
+    def _unpack_chain(self, chain, line):
         """ take an unformatted line and the left-most found chain, iterate upon any chain and return a list
             containing ranges of alphanumerics, comma-separated values found inside chain """
         out = list()
@@ -107,7 +107,7 @@ class sxhkd_helper:
             srch = re.search(r'(?<={).*?(?=})', chain)
             if srch:
                 if ',' in srch.group(0):
-                    split_lines = [i.lstrip() for i in srch.group(0).split(',') if not re.search(r'(\d+-\d+|\d+|(?<!\w)[a-z]-[a-z](?!\w))', i)]  # i.strip()
+                    split_lines = [i.lstrip() for i in srch.group(0).split(',') if not re.search(r'(\d+-\d+|\d+|(?<!\w)[a-z]-[a-z](?!\w))', i)]
                     if split_lines:
                         for sl in split_lines:
                             if sl == '_':
@@ -147,48 +147,34 @@ class sxhkd_helper:
         return out
 
 
-    def _unexpand_chain_lines(self, chains, line):
-        """ takes a list of chains found in the line and the complete line, iterates over chains and unexpands each one
+    def _unpack_chain_lines(self, chains, line):
+        """ takes a list of chains found in the line and the complete line, iterates over chains and unpacks each one
             adding a copy of the tranformed line for each iteration that is finally returned as a complete list
         """
         out = list()
-        inner = list()
         possible_expansions = list()
 
         out_line = ''
         for chain in chains:
-            possible_expansions.append(self._unexpand_chain(chain,line))
+            possible_expansions.append(self._unpack_chain(chain,line))
 
-        for outer_exp in min(possible_expansions, key=len):
-            out_line  = re.sub(r'{.*?}', str(outer_exp), line, count=1)
-
-            if len(possible_expansions) > 1:
-                # the use of variable chain here looks like a hack since it will always be the last found chain iterated upon previously
-                # this implies that this will work for a maximum of two chains, where the second chain is always the longest of the two
-                # the reason this currently works is because of the first substitution matches and replaces the first occurence of {.*?} with a subset of the smallest expanded list of a list of chains
-                # and the second substitution matching and replacing {chain} with a subset of the biggest expanded list of a list of chains.
-                for pos_exp in max(possible_expansions, key=len):
-                    in_line = out_line
-                    in_line = re.sub(rf'{chain}', str(pos_exp), in_line)
-                    inner.append(in_line)
-            else:
-                inner.append(out_line)
-
-        for line in inner:
-            out.append(line)
+        all_possible_expansions = product(*possible_expansions)
+        for exp in all_possible_expansions:
+            exp_line = line
+            for i, le in enumerate(exp):
+                exp_line = re.sub(r'{.*?}', str(le), exp_line, count=1)
+                if (i==len(exp)-1):
+                    out.append(exp_line)
 
         return out
 
 
-    def _unchain_lines(self, lines, count_uh=count_uh):
+    def _unchain_lines(self, lines):
         """ take a transformed block of lines (from ._transform_block), unpacking any keychains, finally
         returning a list containing any unpacked or original lines of keybinds """
         any_chain = False
-        return_lines = list()
         lines[0] = lines[0].strip(self.descr)
         lines[2] = lines[2].rstrip()
-
-        count_uh += 1
 
         to_out = list()
         for outer_index, line in enumerate(lines):
@@ -196,7 +182,7 @@ class sxhkd_helper:
             lines_to_out = list()
             lines_to_out.append(ri)
             if ri:
-                to_out.append(self._unexpand_chain_lines(ri, line))
+                to_out.append(self._unpack_chain_lines(ri, line))
             else:
                 to_out.append([line])
 
@@ -206,7 +192,7 @@ class sxhkd_helper:
         if any_chain and len(return_lines) == 1:
             exit("A keychain denoting multiple segments was specified for the keybind, but no matching cmdchain exists. Fix your sxhkdrc")
 
-        # ensure all sublists in return_lines have the same length by filling the sublist with a copy of the first item 
+        # ensure all sublists in return_lines have the same length by filling the sublist with a copy of the first item
         maxlen = 0
         for index, line in enumerate(return_lines):
             if len(line) >= maxlen:
@@ -214,7 +200,7 @@ class sxhkd_helper:
 
             else:
                 for _ in range(0, maxlen-1):
-                    return_lines[index].append(return_lines[index][0]) 
+                    return_lines[index].append(return_lines[index][0])
 
         return return_lines
 
@@ -282,7 +268,7 @@ def main():
 
     elif args.print:
         print_keybinds(config, column_width=column_width)
-        
+
 
 if __name__ == '__main__':
     main()

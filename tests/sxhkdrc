@@ -33,12 +33,17 @@ alt + F1
 super + e : {_,q,s,r,x,n,w,c,f}
     {wildcard,qmenu_hud,subl,sh ~/.config/bspwm/rofi/bin/asroot,sh ~/.config/bspwm/rofi/bin/powermenu,sh ~/.config/bspwm/rofi/bin/network,firefox,code,pcmanfm} ; sleep 0.1 ; xdotool key Escape
 
-## test: same as above but (maybe? double check) different use cases
+## test: same as above, with different special chars and simpler use cases
 # show {tray,layout,keybind,clip,pass} menu
 super + {d,y,b,c,v}
     {bsptray,bsp-layout-menu,$HOME/.local/bin/sxhkhmenu,clipmenu,rofi-pass}
 
+## test: multiple compounding expansions
+# {focus, send to} {desktop, monitor} {1-4,9}
+{super, ctrl} + {_,shift + }{1-4,9}
+  {bspc, cbsp} {desktop -f, node -d} ^{1-4,9}
+
 ## test: compounding expansions
-# {focus, send to} desktop {1-4,9}
-super + {_,shift + }{1-4,9}
-  bspc {desktop -f, node -d} ^{1-4,9}
+# {focus, send to} desktop {6-8,10}
+super + {_,shift + }{6-8,0}
+  bspc {desktop -f, node -d} ^{6-8,10}
