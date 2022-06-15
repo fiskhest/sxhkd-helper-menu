@@ -101,7 +101,7 @@ parse_commandline "$@"
 
 run_menu()
 {
-    ${SCRIPT_DIR}/hkhelper.py -e "$(${SCRIPT_DIR}/hkhelper.py -p | eval "${_arg_menuhelper} ${_arg_opt_args}" | grep -Po '(?<=\s\s)(?=\S).*(?=\b\s\s)(?!$)')"
+    ${SCRIPT_DIR}/hkhelper.py -e "$(${SCRIPT_DIR}/hkhelper.py -p | eval "${_arg_menuhelper} ${_arg_opt_args}" | grep -Po '(?<=\s\s)\S.*?(?=\b\s{2,}\b)')"
 }
 
 run_menu
