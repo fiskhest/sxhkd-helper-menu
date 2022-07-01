@@ -68,7 +68,7 @@ class sxhkd_helper:
     def _parse_keybinds(self):
         """ take the raw configuration from config and parses all eligible blocks, unchaining keychains and returning
         a list of unpacked commands """
-        block_regex = r"^" + self.descr + r"[\w\s\(\),\-\/&{}_\-,;:\%]+\n[\w\s+\d{}_\-,;:]+\n[\s+\t]+[\w\$()\~\-,{}/;]+.*"
+        block_regex = r"^" + self.descr + r"[\w\s\(\),\-\/&{}_\-,;:\%\*]+\n[\w\s+\d{}_\-,;:]+\n[\s+\t]+[\w\$()\~\-,{}\/;]+.*"
         eligible_blocks = re.findall(block_regex, self._get_raw_config(), flags=re.M)
         unchained_lines = list()
         return_keybinds = list()
